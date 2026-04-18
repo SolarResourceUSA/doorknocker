@@ -938,7 +938,7 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, sans-se
     <button class="filter-btn active" data-filter="all" type="button">All</button>
     <button class="filter-btn" data-filter="issued-stalled" type="button">🔥 Stalled (5)</button>
     <button class="filter-btn" data-filter="ready" type="button">🟠 Ready (5)</button>
-    <button class="filter-btn" data-filter="expired" type="button">💀 Expired (1)</button>
+    <button class="filter-btn" data-filter="expired" type="button">💀 Expired (2)</button>
     <button class="filter-btn" data-filter="issued-new" type="button">⚡ New (9)</button>
     <button class="filter-btn" data-filter="86401" type="button">86401 – Ryan</button>
     <button class="filter-btn" data-filter="86409" type="button">86409 – Black</button>
@@ -1019,7 +1019,21 @@ var PERMITS = [
     phone:'https://www.truepeoplesearch.com/results?streetaddress=7319+E+Winchester+Dr&citystatezip=Kingman+AZ',
     assessor:'https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=7319+Winchester+Dr' },
 
-  { id:'BLD-2025-03393', zip:'86401',
+  { id:'BLD-2025-02185', zip:'86401',
+    addr:'5803 N Bull Mountain Dr', city:'Kingman, AZ 86401',
+    lat:35.2952, lng:-114.0580,
+    status:'expired', statusLabel:'💀 EXPIRED · Apr 1, 2026',
+    issued:'Expired Apr 1, 2026', daysNote:'Lapsed 17 days ago',
+    owner:'HAMMOND TERRI LYN',
+    system:'12.96 kW DC · Ground Mounted PV · 2 Tesla Powerwall 3 · 400A MPU',
+    contractor:null,
+    nc:'red', note:'💀 Permit expired Apr 1 — never issued. Homeowner applied for 12.96 kW ground-mount solar + 2 Powerwalls, contractor never pulled it. They still want solar.',
+    maps:'maps:?daddr=5803+N+Bull+Mountain+Dr,+Kingman+AZ',
+    sat:'https://maps.google.com/maps?q=5803+N+Bull+Mountain+Dr+Kingman+AZ&t=k&z=20',
+    phone:'https://www.truepeoplesearch.com/results?streetaddress=5803+N+Bull+Mountain+Dr&citystatezip=Kingman+AZ',
+    assessor:'https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=5803+Bull+Mountain+Dr' },
+
+    { id:'BLD-2025-03393', zip:'86401',
     addr:'5644 E Wagon Wheel Way', city:'Kingman, AZ 86401',
     lat:35.1745, lng:-114.0220,
     status:'issued-stalled', statusLabel:'🔥 ISSUED · Dec 10, 2025 — STALLED 4+ MONTHS',
