@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Solar Resource USA — Leads Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #f0f0f0;
+    padding: 0;
+    padding-bottom: 60px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #1a1f2e, #0d1a0d);
+    border-bottom: 1px solid #2a3a2a;
+    padding: 18px 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 14px;
+  }
+  .logo-mark { font-size: 11px; letter-spacing: 2px; color: #4caf50; text-transform: uppercase; }
+  .header h1 { font-size: 18px; font-weight: 700; color: #fff; margin-top: 2px; }
+  .updated { font-size: 11px; color: #555; margin-top: 2px; }
+
+  .stats-row {
+    display: flex; gap: 10px; margin-bottom: 14px;
+  }
+  .stat-pill {
+    flex: 1; background: #141926; border-radius: 10px;
+    padding: 8px 12px; text-align: center; border: 1px solid #252d40;
+  }
+  .stat-num { font-size: 22px; font-weight: 700; }
+  .stat-num.appt { color: #ffd54f; }
+  .stat-num.followup { color: #42a5f5; }
+  .stat-num.converted { color: #66bb6a; }
+  .stat-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.7px; margin-top: 1px; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex; gap: 0; border-bottom: 1px solid #252d40;
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 8px; font-size: 13px; font-weight: 600;
+    color: #555; background: none; border: none; cursor: pointer;
+    font-family: inherit; border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .tab-btn.active-appt   { color: #ffd54f; border-bottom-color: #ffd54f; }
+  .tab-btn.active-follow { color: #42a5f5; border-bottom-color: #42a5f5; }
+  .tab-btn.active-all    { color: #66bb6a; border-bottom-color: #66bb6a; }
+
+  /* ── Tab panels ── */
+  .panel { display: none; padding: 16px; }
+  .panel.active { display: block; }
+
+  /* ── Section label ── */
+  .section-label {
+    font-size: 10px; color: #444; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 12px; padding-left: 2px;
+  }
+
+  /* ── Lead cards ── */
+  .card {
+    background: #1a1f2e; border-radius: 16px;
+    border: 2px solid #252d40; margin-bottom: 14px;
+    overflow: hidden; transition: border-color 0.2s;
+  }
+  .card.status-pending-appt  { border-color: #7b5e00; }
+  .card.status-showed        { border-color: #2e7d32; }
+  .card.status-noshow        { border-color: #7f1d1d; }
+  .card.status-converted     { border-color: #1565c0; }
+  .card.status-pending-fu    { border-color: #1565c0; }
+  .card.status-reached       { border-color: #2e7d32; }
+  .card.status-notinterested { border-color: #555; }
+
+  .card-header {
+    padding: 10px 14px;
+    background: #141926;
+    border-bottom: 1px solid #252d40;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-type {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; padding: 2px 8px; border-radius: 6px;
+  }
+  .type-appt   { background: #3a2e00; color: #ffd54f; }
+  .type-follow { background: #0d2645; color: #42a5f5; }
+  .route-date  { font-size: 11px; color: #555; }
+
+  .card-body { padding: 13px 14px; }
+
+  .lead-address {
+    font-size: 17px; font-weight: 700; color: #fff;
+    line-height: 1.3; margin-bottom: 4px;
+  }
+  .lead-city { font-size: 12px; color: #555; margin-bottom: 11px; }
+
+  /* Appointment date banner */
+  .appt-banner {
+    background: #2a2000; border: 1px solid #7b5e00;
+    border-radius: 10px; padding: 10px 13px;
+    margin-bottom: 11px; display: flex; align-items: center; gap: 10px;
+  }
+  .appt-icon { font-size: 20px; flex-shrink: 0; }
+  .appt-info { flex: 1; }
+  .appt-when { font-size: 15px; font-weight: 700; color: #ffd54f; }
+  .appt-countdown { font-size: 11px; color: #a07000; margin-top: 2px; }
+
+  /* Follow-up date banner */
+  .fu-banner {
+    background: #0d2645; border: 1px solid #1565c0;
+    border-radius: 10px; padding: 10px 13px;
+    margin-bottom: 11px; display: flex; align-items: center; gap: 10px;
+  }
+  .fu-icon { font-size: 20px; flex-shrink: 0; }
+  .fu-info { flex: 1; }
+  .fu-when { font-size: 15px; font-weight: 700; color: #42a5f5; }
+  .fu-countdown { font-size: 11px; color: #1a5c9e; margin-top: 2px; }
+
+  .info-row {
+    display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .info-chip {
+    background: #0f1117; border-radius: 8px;
+    padding: 6px 10px; font-size: 12px; color: #888;
+  }
+  .info-chip strong { color: #ccc; }
+
+  .owner-row {
+    background: #0f1117; border-radius: 10px; padding: 9px 12px;
+    display: flex; align-items: center; gap: 9px; margin-bottom: 10px;
+  }
+  .owner-icon { font-size: 16px; flex-shrink: 0; }
+  .owner-name { font-size: 14px; font-weight: 600; color: #fff; }
+  .owner-tag {
+    margin-left: auto; font-size: 10px; padding: 2px 7px;
+    border-radius: 5px; font-weight: 600; flex-shrink: 0;
+  }
+  .tag-verified { background: #1b3a1b; color: #66bb6a; }
+  .tag-unknown  { background: #2a2a2a; color: #888; }
+
+  .notes-box {
+    background: #0f1117; border-radius: 10px; padding: 9px 12px;
+    margin-bottom: 10px; font-size: 13px; color: #aaa;
+    line-height: 1.5; border-left: 2px solid #2a3040;
+  }
+  .notes-box .notes-label {
+    font-size: 10px; color: #444; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 4px;
+  }
+
+  /* Action buttons */
+  .action-row {
+    display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 11px;
+  }
+  .abtn {
+    display: inline-block; text-decoration: none;
+    font-size: 11px; font-weight: 600; padding: 7px 11px;
+    border-radius: 9px; white-space: nowrap; flex-shrink: 0;
+  }
+  .abtn-nav    { background: #1a3a5c; color: #4fc3f7; border: 1px solid #1e4d7a; }
+  .abtn-roof   { background: #1a2a1a; color: #81c784; border: 1px solid #2e5e2e; }
+  .abtn-phone  { background: #1e1a2e; color: #b39ddb; border: 1px solid #4a3a6e; }
+
+  /* Status buttons */
+  .status-label {
+    font-size: 10px; color: #444; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 7px;
+  }
+  .status-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sbtn {
+    background: #1e2438; color: #555; border: 1.5px solid #2a3040;
+    border-radius: 20px; padding: 7px 13px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    -webkit-appearance: none; appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; min-height: 34px;
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center; padding: 48px 20px;
+    color: #444; font-size: 14px; line-height: 1.7;
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+  /* ── Bottom bar ── */
+  .bottom-bar {
+    padding: 0 16px; margin-top: 8px;
+  }
+  .how-to {
+    background: #141926; border: 1px solid #252d40;
+    border-radius: 12px; padding: 14px;
+    font-size: 12px; color: #555; line-height: 1.8;
+  }
+  .how-to strong { color: #888; display: block; margin-bottom: 4px; }
+
+  .footer {
+    text-align: center; margin-top: 20px; padding: 0 16px;
+    font-size: 11px; color: #333; line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── STICKY HEADER ── -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="logo-mark">☀️ Solar Resource USA</div>
+      <h1>Leads Tracker</h1>
+      <div class="updated" id="updated-label">Last updated: April 16, 2026</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-pill">
+      <div class="stat-num appt" id="stat-appt">1</div>
+      <div class="stat-label">Appointments</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num followup" id="stat-fu">1</div>
+      <div class="stat-label">Follow-Ups</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num converted" id="stat-conv">0</div>
+      <div class="stat-label">Converted</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button type="button" class="tab-btn active-appt" id="tab-appt" onclick="showTab('appt')">📅 Appointments</button>
+    <button type="button" class="tab-btn" id="tab-follow" onclick="showTab('follow')">🔁 Follow-Ups</button>
+    <button type="button" class="tab-btn" id="tab-all" onclick="showTab('all')">📋 All Leads</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     TAB: APPOINTMENTS
+══════════════════════════════════════ -->
+<div class="panel active" id="panel-appt">
+  <div class="section-label">Upcoming appointments</div>
+
+  <!-- APPT CARD 1 -->
+  <div class="card status-pending-appt" id="acard-0">
+    <div class="card-header">
+      <span class="card-type type-appt">📅 Appointment</span>
+      <span class="route-date">Route: Apr 16, 2026</span>
+    </div>
+    <div class="card-body">
+      <div class="lead-address">529 1st Ave</div>
+      <div class="lead-city">Kingman, AZ 86401</div>
+
+      <div class="appt-banner">
+        <div class="appt-icon">📅</div>
+        <div class="appt-info">
+          <div class="appt-when">Tomorrow, Apr 17 · 6:00 PM</div>
+          <div class="appt-countdown" id="appt-countdown-0">Loading…</div>
+        </div>
+      </div>
+
+      <div class="owner-row">
+        <div class="owner-icon">⚠️</div>
+        <div class="owner-name">Renell &amp; Joe (unverified — spoke to husband)</div>
+        <span class="owner-tag tag-unknown">UNVERIFIED</span>
+      </div>
+
+      <div class="info-row">
+        <div class="info-chip">💰 <strong>$156,000</strong></div>
+        <div class="info-chip">📅 Sold Feb 26</div>
+        <div class="info-chip">🛏 5 bd / 2 ba</div>
+        <div class="info-chip">📍 0.28 mi</div>
+      </div>
+
+      <div class="notes-box">
+        <div class="notes-label">Notes from knock</div>
+        Spoke to husband. Names possibly Renell &amp; Joe. Set 6pm appointment for Apr 17.
+      </div>
+
+      <div class="action-row">
+        <a class="abtn abtn-nav"   href="maps:?daddr=529+1st+Ave,+Kingman,+AZ+86401">🧭 Navigate</a>
+        <a class="abtn abtn-roof"  href="https://maps.google.com/maps?q=529+1st+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a>
+        <a class="abtn abtn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=529+1st+Ave&citystatezip=Kingman+AZ+86401">🔍 Find #</a>
+      </div>
+
+      <div class="status-label">Outcome</div>
+      <div class="status-btns">
+        <button type="button" class="sbtn" onclick="setCardStatus('acard-0',this,'pending-appt','#2a2000','#ffd54f','#7b5e00')">⏳ Pending</button>
+        <button type="button" class="sbtn" onclick="setCardStatus('acard-0',this,'showed','#1b3a1b','#66bb6a','#2e7d32')">✅ Showed</button>
+        <button type="button" class="sbtn" onclick="setCardStatus('acard-0',this,'noshow','#3a0d0d','#ef9a9a','#7f1d1d')">🚫 No Show</button>
+        <button type="button" class="sbtn" onclick="setCardStatus('acard-0',this,'converted','#0d2645','#42a5f5','#1565c0')">⭐ Converted</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- empty state (shown when no appointments) -->
+  <div class="empty" id="appt-empty" style="display:none;">
+    <div class="empty-icon">📅</div>
+    No appointments yet.<br>
+    <span style="font-size:12px;">Leads tagged "Appt Set" will appear here.</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     TAB: FOLLOW-UPS
+══════════════════════════════════════ -->
+<div class="panel" id="panel-follow">
+  <div class="section-label">Hasn't moved in — circle back in 30 days</div>
+
+  <!-- FOLLOW-UP CARD 1 -->
+  <div class="card status-pending-fu" id="fcard-0">
+    <div class="card-header">
+      <span class="card-type type-follow">🏠 Hasn't Moved In</span>
+      <span class="route-date">Knocked: Apr 16, 2026</span>
+    </div>
+    <div class="card-body">
+      <div class="lead-address">632 E Beale St</div>
+      <div class="lead-city">Kingman, AZ 86401</div>
+
+      <div class="fu-banner">
+        <div class="fu-icon">🔁</div>
+        <div class="fu-info">
+          <div class="fu-when">Follow up: May 16, 2026</div>
+          <div class="fu-countdown" id="fu-countdown-0">Loading…</div>
+        </div>
+      </div>
+
+      <div class="owner-row">
+        <div class="owner-icon">👤</div>
+        <div class="owner-name">MOORE GENE L &amp; JOY LARUE</div>
+        <span class="owner-tag tag-verified">✓ VERIFIED</span>
+      </div>
+
+      <div class="info-row">
+        <div class="info-chip">💰 <strong>$235,000</strong></div>
+        <div class="info-chip">📅 Sold Apr 9</div>
+        <div class="info-chip">🛏 3 bd / 2 ba</div>
+        <div class="info-chip">📍 0.07 mi</div>
+      </div>
+
+      <div class="notes-box">
+        <div class="notes-label">Notes from knock</div>
+        Haven't moved in yet. Closest home on route — closed Apr 9, only 7 days before knock.
+        30-day Cowork reminder set for May 16 at 9am.
+      </div>
+
+      <div class="action-row">
+        <a class="abtn abtn-nav"   href="maps:?daddr=632+E+Beale+St,+Kingman,+AZ+86401">🧭 Navigate</a>
+        <a class="abtn abtn-roof"  href="https://maps.google.com/maps?q=632+E+Beale+St,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a>
+        <a class="abtn abtn-phone" href="https://www.truepeoplesearch.com/results?name=GENE+MOORE&citystatezip=Kingman+AZ+86401">🔍 Find #</a>
+      </div>
+
+      <div class="status-label">Status</div>
+      <div class="status-btns">
+        <button type="button" class="sbtn" onclick="setCardStatus('fcard-0',this,'pending-fu','#0d2645','#42a5f5','#1565c0')">⏳ Pending</button>
+        <button type="button" class="sbtn" onclick="setCardStatus('fcard-0',this,'reached','#1b3a1b','#66bb6a','#2e7d32')">📞 Reached</button>
+        <button type="button" class="sbtn" onclick="setCardStatus('fcard-0',this,'notinterested','#2a2a2a','#888','#555')">👎 Not Interested</button>
+        <button type="button" class="sbtn" onclick="setCardStatus('fcard-0',this,'converted','#1b3a1b','#ffd54f','#f57f17')">⭐ Converted</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty" id="fu-empty" style="display:none;">
+    <div class="empty-icon">🔁</div>
+    No follow-ups yet.<br>
+    <span style="font-size:12px;">Leads tagged "Hasn't Moved In" will appear here.</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     TAB: ALL LEADS
+══════════════════════════════════════ -->
+<div class="panel" id="panel-all">
+  <div class="section-label">April 16, 2026 · 5 stops · Kingman downtown</div>
+
+  <!-- ALL LEADS — compact summary cards -->
+
+  <div class="card" style="border-color:#2e7d32;">
+    <div class="card-body" style="padding:11px 14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff;">529 1st Ave</div>
+          <div style="font-size:11px;color:#555;">Renell &amp; Joe · Feb 26 · $156k</div>
+        </div>
+        <span style="font-size:11px;background:#1b3a1b;color:#66bb6a;padding:3px 9px;border-radius:6px;font-weight:700;white-space:nowrap;">📅 Appt Set</span>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">6pm tomorrow Apr 17 · Spoke to husband</div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:#1565c0;">
+    <div class="card-body" style="padding:11px 14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff;">632 E Beale St</div>
+          <div style="font-size:11px;color:#555;">Moore Gene L &amp; Joy Larue · Apr 9 · $235k</div>
+        </div>
+        <span style="font-size:11px;background:#0d2645;color:#42a5f5;padding:3px 9px;border-radius:6px;font-weight:700;white-space:nowrap;">🏠 Follow-Up</span>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">Hasn't moved in · Circle back May 16</div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:#333;">
+    <div class="card-body" style="padding:11px 14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff;">426 Golconda Ave</div>
+          <div style="font-size:11px;color:#555;">Begay Kyle G · Mar 17 · $195.7k</div>
+        </div>
+        <span style="font-size:11px;background:#2a2a2a;color:#888;padding:3px 9px;border-radius:6px;font-weight:700;white-space:nowrap;">🚪 Nobody Home</span>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">No answer · No notes</div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:#333;">
+    <div class="card-body" style="padding:11px 14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff;">413 Damon St</div>
+          <div style="font-size:11px;color:#555;">Inguz Corporation · Mar 12 · $60k</div>
+        </div>
+        <span style="font-size:11px;background:#2a1040;color:#ce93d8;padding:3px 9px;border-radius:6px;font-weight:700;white-space:nowrap;">🏢 Corp-Owned</span>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">Abandoned</div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:#f57f17;">
+    <div class="card-body" style="padding:11px 14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff;">406 Goldroad Ave</div>
+          <div style="font-size:11px;color:#555;">Raybould Lindsey · Jan 26 · $165k</div>
+        </div>
+        <span style="font-size:11px;background:#2a200a;color:#ffd54f;padding:3px 9px;border-radius:6px;font-weight:700;white-space:nowrap;">☀️ Has Solar</span>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">Lindsey · (928) 279-2310 · Swinging back after 6pm appt</div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ── How to update ── -->
+<div class="bottom-bar">
+  <div class="how-to">
+    <strong>📋 How to update this tracker</strong>
+    At end of day: tap "Generate Day Summary" in your route file → copy the text → open a new Claude chat → paste and say <em>"update my tracker."</em> Claude will add any new Appointments or Follow-Ups automatically.
+  </div>
+</div>
+
+<div class="footer">
+  Solar Resource USA · Kingman, AZ<br>
+  <span style="color:#2a2a2a;">Updated by Claude · ryanflores@solarresourceusa.com</span>
+</div>
+
+
+<script>
+// ── Tab switching ────────────────────────────────────────────
+function showTab(tab) {
+  ['appt','follow','all'].forEach(function(t) {
+    document.getElementById('panel-' + t).classList.remove('active');
+    var btn = document.getElementById('tab-' + t);
+    btn.className = 'tab-btn';
+  });
+  document.getElementById('panel-' + tab).classList.add('active');
+  var activeBtn = document.getElementById('tab-' + tab);
+  if (tab === 'appt')   activeBtn.className = 'tab-btn active-appt';
+  if (tab === 'follow') activeBtn.className = 'tab-btn active-follow';
+  if (tab === 'all')    activeBtn.className = 'tab-btn active-all';
+}
+
+// ── Card status buttons ──────────────────────────────────────
+function setCardStatus(cardId, btn, status, bg, color, border) {
+  // Reset all sibling buttons
+  var siblings = btn.parentElement.querySelectorAll('.sbtn');
+  siblings.forEach(function(b) {
+    b.style.background = '';
+    b.style.color = '';
+    b.style.borderColor = '';
+  });
+  // Highlight this one
+  btn.style.background   = bg;
+  btn.style.color        = color;
+  btn.style.borderColor  = border;
+  // Update card border
+  var card = document.getElementById(cardId);
+  if (card) card.style.borderColor = border;
+}
+
+// ── Countdown timers ─────────────────────────────────────────
+function updateCountdowns() {
+  var now = new Date();
+
+  // Appointment countdown
+  var apptDate = new Date('2026-04-17T18:00:00-07:00');
+  var el0 = document.getElementById('appt-countdown-0');
+  if (el0) {
+    var diff = apptDate - now;
+    if (diff > 0) {
+      var h = Math.floor(diff / 3600000);
+      var m = Math.floor((diff % 3600000) / 60000);
+      if (h >= 24) {
+        el0.textContent = Math.floor(h/24) + ' day' + (Math.floor(h/24)>1?'s':'') + ' away';
+      } else {
+        el0.textContent = h + 'h ' + m + 'm away';
+      }
+    } else {
+      el0.textContent = 'Past — log the outcome above';
+      el0.style.color = '#ef9a9a';
+    }
+  }
+
+  // Follow-up countdown
+  var fuDate = new Date('2026-05-16T09:00:00-07:00');
+  var el1 = document.getElementById('fu-countdown-0');
+  if (el1) {
+    var diff2 = fuDate - now;
+    if (diff2 > 0) {
+      var days = Math.ceil(diff2 / 86400000);
+      el1.textContent = days + ' day' + (days !== 1 ? 's' : '') + ' until follow-up window';
+    } else {
+      el1.textContent = 'Follow-up window reached — reach out now';
+      el1.style.color = '#ffd54f';
+    }
+  }
+}
+
+updateCountdowns();
+setInterval(updateCountdowns, 60000);
+
+// ── Set up tab buttons with addEventListener ─────────────────
+window.addEventListener('load', function() {
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tab = btn.id.replace('tab-', '');
+      showTab(tab);
+    });
+  });
+});
+</script>
+
+</body>
+</html>
