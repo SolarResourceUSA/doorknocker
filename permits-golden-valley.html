@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Solar Permits — Golden Valley 86413</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #111; color: #eee; font-family: -apple-system, sans-serif; padding: 12px; padding-bottom: 40px; }
+h1 { font-size: 18px; color: #fff; margin-bottom: 4px; }
+.subtitle { font-size: 12px; color: #888; margin-bottom: 4px; }
+.rule-box { font-size: 12px; color: #f59e0b; background: #1c1400; border-radius: 8px; padding: 10px 12px; margin: 12px 0 20px 0; line-height: 1.5; }
+.legend { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; display: inline-block; white-space: nowrap; }
+.badge.expired        { background: #4c0519; color: #fda4af; }
+.badge.ready          { background: #422006; color: #fdba74; }
+.badge.issued-new     { background: #14532d; color: #86efac; }
+.badge.issued-stalled { background: #7f1d1d; color: #fca5a5; }
+.section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 10px 0; border-bottom: 1px solid #333; padding-bottom: 6px; color: #888; }
+.section-label.s-expired { color: #fda4af; border-color: #4c0519; }
+.section-label.s-ready   { color: #fdba74; border-color: #422006; }
+.section-label.s-issued  { color: #86efac; border-color: #14532d; }
+.card { border-radius: 12px; padding: 14px; margin-bottom: 10px; border-left: 4px solid #555; }
+.card.expired        { border-left-color: #f43f5e; background: #1a0010; }
+.card.ready          { border-left-color: #ea580c; background: #180d00; }
+.card.issued-new     { border-left-color: #16a34a; background: #0a1c0f; }
+.card.issued-stalled { border-left-color: #dc2626; background: #1c0a0a; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.permit-num { font-size: 11px; color: #666; font-family: monospace; padding-top: 2px; }
+.card-addr  { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 3px; line-height: 1.2; }
+.card-meta  { font-size: 12px; color: #999; margin-bottom: 8px; }
+.card-note  { font-size: 12px; border-radius: 6px; padding: 7px 9px; margin-bottom: 10px; line-height: 1.5; color: #f59e0b; background: #1c1400; }
+.card-note.pink   { color: #fda4af; background: #1a0010; }
+.card-note.orange { color: #fdba74; background: #180d00; }
+.card-note.green  { color: #86efac; background: #0a1c0f; }
+.card-note.red    { color: #fca5a5; background: #1c0a0a; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { display: inline-block; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; touch-action: manipulation; -webkit-tap-highlight-color: rgba(0,0,0,0); cursor: pointer; border: none; }
+.btn-map      { background: #1d4ed8; color: #fff; }
+.btn-sat      { background: #065f46; color: #fff; }
+.btn-phone    { background: #7c3aed; color: #fff; }
+.btn-assessor { background: #92400e; color: #fff; }
+.source-note { margin-top: 28px; padding: 12px; background: #1a1a1a; border-radius: 8px; font-size: 11px; color: #666; line-height: 1.6; }
+.source-note a { color: #60a5fa; }
+.updated { font-size: 11px; color: #555; text-align: right; margin-top: 14px; }
+.owner-row { display: flex; align-items: center; gap: 10px; background: #1a1a1a; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+.owner-icon { font-size: 20px; }
+.owner-info { flex: 1; }
+.owner-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+.owner-name { font-size: 14px; font-weight: 700; color: #fff; }
+.owner-tag { font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 8px; white-space: nowrap; }
+.tag-hot { background: #14532d; color: #86efac; }
+.tag-unknown { background: #374151; color: #9ca3af; }
+.solar-row { background: #0d1a14; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; border-left: 3px solid #16a34a; }
+.solar-label { font-size: 10px; color: #4ade80; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: 700; }
+.solar-detail { font-size: 13px; font-weight: 700; color: #86efac; margin-bottom: 2px; }
+.solar-contractor { font-size: 11px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<h1>🔌 Solar Permits — Golden Valley 86413</h1>
+<p class="subtitle">Mohave County SmartGov · Open permits only (no panels installed) · Pulled Apr 16, 2026</p>
+<p class="subtitle">9 open permits &nbsp;·&nbsp; 1 expired &nbsp;·&nbsp; 3 ready to issue &nbsp;·&nbsp; 5 issued</p>
+
+<div class="rule-box">
+  💡 <strong>The Rule:</strong> A permit = they already decided they want solar. Knock until you physically see panels on the roof. Installs take 2–4 months from permit date. Even if they signed with someone else — deals fall through, installers ghost, homeowners have regrets. Be there.
+</div>
+
+<div class="legend">
+  <span class="badge expired">💀 Expired — Permit Lapsed, Project Dead</span>
+  <span class="badge ready">🟠 Ready To Issue — Contractor Never Came Back</span>
+  <span class="badge issued-new">⚡ Issued (Recent) — Panels Not Up Yet</span>
+  <span class="badge issued-stalled">🔥 Issued (Stalled 60+ Days) — Hot Lead</span>
+</div>
+
+<!-- ===== EXPIRED ===== -->
+<div class="section-label s-expired">💀 Expired — Permit Lapsed, Project Completely Died (Hottest Lead)</div>
+
+<div class="card expired">
+  <div class="card-top">
+    <span class="badge expired">💀 EXPIRED · Mar 25, 2026</span>
+    <span class="permit-num">BLD-2024-00053</span>
+  </div>
+  <div class="card-addr">6861 N Stewart Mountain Rd</div>
+  <div class="card-meta">Golden Valley, AZ 86413 &nbsp;·&nbsp; Expired: Mar 25, 2026 &nbsp;·&nbsp; Permit lapsed 3 weeks ago</div>
+  <div class="card-note pink">🚨 HOTTEST LEAD IN GOLDEN VALLEY. Homeowner applied for solar, got approved, and the permit expired before anything happened — contractor ghosted, financing collapsed, or install dragged past the deadline. They still want solar. They just have nothing to show for it. Knock this door first.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">BERLIN RICHARD & JEANNIE JT</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=6861+N+Stewart+Mountain+Rd,+Golden+Valley+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=6861+N+Stewart+Mountain+Rd+Golden+Valley+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=6861+Stewart+Mountain+Rd" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=6861+N+Stewart+Mountain+Rd&citystatezip=Golden+Valley+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<!-- ===== READY TO ISSUE ===== -->
+<div class="section-label s-ready">🟠 Ready To Issue — Approved But Contractor Never Pulled the Permit (Newest → Oldest)</div>
+
+<div class="card ready">
+  <div class="card-top">
+    <span class="badge ready">🟠 READY TO ISSUE · Feb 2, 2026 — 2+ MONTHS STALLED</span>
+    <span class="permit-num">BLD-2025-03585</span>
+  </div>
+  <div class="card-addr">872 S San Pedro Rd</div>
+  <div class="card-meta">Golden Valley, AZ 86413 &nbsp;·&nbsp; Ready To Issue: Feb 2, 2026 &nbsp;·&nbsp; 2+ months, contractor never came back</div>
+  <div class="card-note orange">⚠️ Permit approved Feb 2 — contractor has not come back to pull it in 2+ months. Project is completely idle. Homeowner is approved and waiting. Be the one who shows up.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">SHEPHARD JEFFREY & ENES A</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">6.16 kW · Battery</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=872+S+San+Pedro+Rd,+Golden+Valley+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=872+S+San+Pedro+Rd+Golden+Valley+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=872+San+Pedro+Rd" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=872+S+San+Pedro+Rd&citystatezip=Golden+Valley+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="card ready">
+  <div class="card-top">
+    <span class="badge ready">🟠 READY TO ISSUE · Nov 4, 2025 — 5+ MONTHS STALLED</span>
+    <span class="permit-num">BLD-2025-03101</span>
+  </div>
+  <div class="card-addr">4704 W Burro Dr</div>
+  <div class="card-meta">Golden Valley, AZ 86413 &nbsp;·&nbsp; Ready To Issue: Nov 4, 2025 &nbsp;·&nbsp; 5+ months, contractor abandoned</div>
+  <div class="card-note orange">⚠️ Approved 5+ months ago, contractor never came back to pick up the permit. This project is dead in the water. Homeowner wanted solar — they just don't have anyone to do it anymore.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">HOLDEN JEFFERY S & MARIE L</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">6.480 kW DC · 11.500 kW AC (inverter) · Tesla Powerwall 3 · 16 Modules</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=4704+W+Burro+Dr,+Golden+Valley+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=4704+W+Burro+Dr+Golden+Valley+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=4704+Burro+Dr" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=4704+W+Burro+Dr&citystatezip=Golden+Valley+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="card ready">
+  <div class="card-top">
+    <span class="badge ready">🟠 READY TO ISSUE · Oct 23, 2025 — 6 MONTHS STALLED</span>
+    <span class="permit-num">BLD-2025-02697</span>
+  </div>
+  <div class="card-addr">3671 N Neptune Rd</div>
+  <div class="card-meta">Golden Valley, AZ 86413 &nbsp;·&nbsp; Ready To Issue: Oct 23, 2025 &nbsp;·&nbsp; 6 months, contractor never came back</div>
+  <div class="card-note orange">⚠️ 6 months sitting at "Ready To Issue" — longest stall in Golden Valley. Contractor approved the plan and walked away. Homeowner may not even know how bad it is. Show up with a solution.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">NASH MARK J</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">7.790 kW DC · 5.760 kW AC (inverter) · 19 Modules</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=3671+N+Neptune+Rd,+Golden+Valley+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=3671+N+Neptune+Rd+Golden+Valley+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=3671+Neptune+Rd" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=3671+N+Neptune+Rd&citystatezip=Golden+Valley+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<!-- ===== ISSUED ===== -->
+<div class="section-label s-issued">⚡ Issued — Active Permit, No Final Inspection, No Panels (Newest → Oldest)</div>
+
+<div class="card issued-new">
+  <div class="card-top">
+    <span class="badge issued-new">⚡ ISSUED · Apr 13, 2026</span>
+    <span class="permit-num">BLD-2026-00905</span>
+  </div>
+  <div class="card-addr">459 S Martinez Rd</div>
+  <div class="card-meta">Golden Valley, AZ 86413 &nbsp;·&nbsp; Issued: Apr 13, 2026 &nbsp;·&nbsp; 3 days ago</div>
+  <div class="card-note green">🚪 Brand new permit — panels are definitely not on the roof. Installs take 2–4 months. Knock now. If they already signed, they're still in the rescission window and can cancel or switch.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">BROOKSHIRE LONNIE A & SHARON K</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">6.970 kW DC · 5.760 kW AC (inverter) · Tesla Powerwall 3 · 17 Modules</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=459+S+Martinez+Rd,+Golden+Valley+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=459+S+Martinez+Rd+Golden+Valley+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=459+Martinez+Rd" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=459+S+Martinez+Rd&citystatezip=Golden+Valley+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+
+<div class="card issued-new">
+  <div class="card-top">
+    <span class="badge issued-new">⚡ ISSUED · Mar 26, 2026</span>
+    <span class="permit-num">BLD-2026-00778</span>
+  </div>
+  <div class="card-addr">6015 W Shipp Dr</div>
+  <div class="card-meta">Golden Valley, AZ 86413 &nbsp;·&nbsp; Issued: Mar 26, 2026 &nbsp;·&nbsp; 21 days ago</div>
+  <div class="card-note green">🚪 3 weeks since permit — panels not on the roof. Check satellite before driving out. If nothing visible, this is a live lead regardless of who they signed with.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">MANCHESTER JOHN & ROSALINDA</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">14.350 kW DC · 7.600 kW AC (inverter) · Tesla Powerwall 3 · 35 Modules</div>
+    <div class="solar-contractor">🔧 OUR WORLD ENERGY · License #326134</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=6015+W+Shipp+Dr,+Golden+Valley+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=6015+W+Shipp+Dr+Golden+Valley+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=6015+Shipp+Dr" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=6015+W+Shipp+Dr&citystatezip=Golden+Valley+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="card issued-stalled">
+  <div class="card-top">
+    <span class="badge issued-stalled">🔥 ISSUED · Jan 8, 2026 — STALLED 3+ MONTHS</span>
+    <span class="permit-num">BLD-2025-00406</span>
+  </div>
+  <div class="card-addr">3810 N Santa Maria Rd</div>
+  <div class="card-meta">Golden Valley, AZ 86413 &nbsp;·&nbsp; Issued: Jan 8, 2026 &nbsp;·&nbsp; 3+ months open, never finaled</div>
+  <div class="card-note red">⚠️ Issued Jan 8 — by now panels should be installed if the job is on track, but no final inspection has been called. Install is stalled or incomplete. Check satellite first, then knock. If no panels on the roof, that's your opening.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">EVANS THOMAS J GAGE ANGELA KRISTEEN</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=3810+N+Santa+Maria+Rd,+Golden+Valley+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=3810+N+Santa+Maria+Rd+Golden+Valley+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=3810+Santa+Maria+Rd" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=3810+N+Santa+Maria+Rd&citystatezip=Golden+Valley+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="card issued-stalled">
+  <div class="card-top">
+    <span class="badge issued-stalled">🔥 ISSUED · Nov 3, 2025 — STALLED 5+ MONTHS</span>
+    <span class="permit-num">BLD-2025-02725</span>
+  </div>
+  <div class="card-addr">3647 N Laguna Rd</div>
+  <div class="card-meta">Golden Valley, AZ 86413 &nbsp;·&nbsp; Issued: Nov 3, 2025 &nbsp;·&nbsp; 5+ months open, never finaled</div>
+  <div class="card-note red">⚠️ Permit issued 5+ months ago with zero progress — no final inspection, no panels. Longest stalled Issued permit in Golden Valley. Contractor abandoned the job. This homeowner needs someone to rescue this deal.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">BURKLEO J L & PAULA A</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">3.870 kW DC · 3.141 kW AC (inverter) · Tesla Powerwall 3 · 9 Modules</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=3647+N+Laguna+Rd,+Golden+Valley+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=3647+N+Laguna+Rd+Golden+Valley+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=3647+Laguna+Rd" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=3647+N+Laguna+Rd&citystatezip=Golden+Valley+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="source-note">
+  <strong>Source:</strong> Mohave County SmartGov Portal · <a href="https://co-mohave-az.smartgovcommunity.com/Public/PermitSearch" target="_blank">co-mohave-az.smartgovcommunity.com</a><br>
+  Search: Residential Building Permit · Project Name: solar · Zip: 86413 · 31 total results, 9 open<br>
+  <strong>To refresh:</strong> Advanced Search → Type: Residential Building Permit → Project Name: solar → Zip: 86413 → Search. Exclude Closed and Finaled — those have panels.<br>
+  <strong>Tip:</strong> Check weekly. Any Issued permit with no finaling after 60 days = stalled hot lead.
+</div>
+<p class="updated">Last updated: April 16, 2026</p>
+
+</body>
+</html>
