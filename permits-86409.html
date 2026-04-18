@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Solar Permits — Kingman North 86409</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #111; color: #eee; font-family: -apple-system, sans-serif; padding: 12px; padding-bottom: 40px; }
+h1 { font-size: 18px; color: #fff; margin-bottom: 4px; }
+.subtitle { font-size: 12px; color: #888; margin-bottom: 4px; }
+.rule-box { font-size: 12px; color: #f59e0b; background: #1c1400; border-radius: 8px; padding: 10px 12px; margin: 12px 0 20px 0; line-height: 1.5; }
+.legend { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; display: inline-block; white-space: nowrap; }
+.badge.ready          { background: #422006; color: #fdba74; }
+.badge.issued-new     { background: #14532d; color: #86efac; }
+.badge.issued-stalled { background: #7f1d1d; color: #fca5a5; }
+.section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 10px 0; border-bottom: 1px solid #333; padding-bottom: 6px; color: #888; }
+.section-label.s-ready   { color: #fdba74; border-color: #422006; }
+.section-label.s-issued  { color: #86efac; border-color: #14532d; }
+.section-label.s-stalled { color: #fca5a5; border-color: #7f1d1d; }
+.card { border-radius: 12px; padding: 14px; margin-bottom: 10px; border-left: 4px solid #555; }
+.card.ready          { border-left-color: #ea580c; background: #180d00; }
+.card.issued-new     { border-left-color: #16a34a; background: #0a1c0f; }
+.card.issued-stalled { border-left-color: #dc2626; background: #1c0a0a; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.permit-num { font-size: 11px; color: #666; font-family: monospace; padding-top: 2px; }
+.card-addr  { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 3px; line-height: 1.2; }
+.card-meta  { font-size: 12px; color: #999; margin-bottom: 8px; }
+.card-note  { font-size: 12px; border-radius: 6px; padding: 7px 9px; margin-bottom: 10px; line-height: 1.5; }
+.card-note.orange { color: #fdba74; background: #180d00; }
+.card-note.green  { color: #86efac; background: #0a1c0f; }
+.card-note.red    { color: #fca5a5; background: #1c0a0a; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { display: inline-block; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; touch-action: manipulation; -webkit-tap-highlight-color: rgba(0,0,0,0); cursor: pointer; border: none; }
+.btn-map      { background: #1d4ed8; color: #fff; }
+.btn-sat      { background: #065f46; color: #fff; }
+.btn-phone    { background: #7c3aed; color: #fff; }
+.btn-assessor { background: #92400e; color: #fff; }
+.source-note { margin-top: 28px; padding: 12px; background: #1a1a1a; border-radius: 8px; font-size: 11px; color: #666; line-height: 1.6; }
+.source-note a { color: #60a5fa; }
+.updated { font-size: 11px; color: #555; text-align: right; margin-top: 14px; }
+.owner-row { display: flex; align-items: center; gap: 10px; background: #1a1a1a; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+.owner-icon { font-size: 20px; }
+.owner-info { flex: 1; }
+.owner-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+.owner-name { font-size: 14px; font-weight: 700; color: #fff; }
+.owner-tag { font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 8px; white-space: nowrap; }
+.tag-hot { background: #14532d; color: #86efac; }
+.solar-row { background: #0d1a14; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; border-left: 3px solid #16a34a; }
+.solar-label { font-size: 10px; color: #4ade80; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: 700; }
+.solar-detail { font-size: 13px; font-weight: 700; color: #86efac; }
+.solar-contractor { font-size: 11px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<h1>🔌 Solar Permits — Kingman North 86409</h1>
+<p class="subtitle">Mohave County SmartGov · Open permits only (no panels installed) · Pulled Apr 17, 2026</p>
+<p class="subtitle">8 open permits &nbsp;·&nbsp; 2 ready to issue &nbsp;·&nbsp; 4 recently issued &nbsp;·&nbsp; 2 issued &amp; stalled</p>
+
+<div class="rule-box">
+  💡 <strong>The Rule:</strong> A permit = they already decided they want solar. Knock until you physically see panels on the roof. Installs take 2–4 months from permit date. Even if they signed with someone else — deals fall through, installers ghost, homeowners have regrets. Be there.
+</div>
+
+<div class="legend">
+  <span class="badge ready">🟠 Ready To Issue — Contractor Never Came Back</span>
+  <span class="badge issued-new">⚡ Issued (Recent) — Panels Not Up Yet</span>
+  <span class="badge issued-stalled">🔥 Issued (Stalled 60+ Days) — Hot Lead</span>
+</div>
+
+<!-- ===== ISSUED & STALLED ===== -->
+<div class="section-label s-stalled">🔥 Issued &amp; Stalled 60+ Days — Contractor AWOL (Hottest Leads)</div>
+
+<div class="card issued-stalled">
+  <div class="card-top">
+    <span class="badge issued-stalled">🔥 ISSUED · Nov 24, 2025 — 145 DAYS STALLED</span>
+    <span class="permit-num">BLD-2025-03268</span>
+  </div>
+  <div class="card-addr">10244 N Avenida Vientos</div>
+  <div class="card-meta">Kingman, AZ 86409 &nbsp;·&nbsp; Issued: Nov 24, 2025 &nbsp;·&nbsp; 145 days and nothing on the roof</div>
+  <div class="card-note red">🔥 HOTTEST LEAD IN 86409. Permit issued nearly 5 months ago — biggest system on this list at 35 modules / 14.175 kW. Something stopped this install dead. Contractor problems, financing issues, or homeowner changed their mind mid-process. Knock this door today.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">LAVIGNE JOSEPH S & DAWN MARIA JT</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">14.175 kW DC · 11.500 kW AC · Tesla Powerwall 3 · 35 Modules · 200A MPU</div>
+    <div class="solar-contractor">🔧 OUR WORLD ENERGY · License #326134</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=10244+N+Avenida+Vientos,+Kingman+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=10244+N+Avenida+Vientos+Kingman+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=10244+Avenida+Vientos" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=10244+N+Avenida+Vientos&citystatezip=Kingman+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="card issued-stalled">
+  <div class="card-top">
+    <span class="badge issued-stalled">🔥 ISSUED · Jan 6, 2026 — 101 DAYS STALLED</span>
+    <span class="permit-num">BLD-2025-03520</span>
+  </div>
+  <div class="card-addr">9203 N Bank St</div>
+  <div class="card-meta">Kingman, AZ 86409 &nbsp;·&nbsp; Issued: Jan 6, 2026 &nbsp;·&nbsp; Over 3 months, no panels installed</div>
+  <div class="card-note red">🔥 Over 3 months since permit issued — 22-module system that never made it to the roof. A deal this size stalling this long means something went seriously wrong. Show up before they give up on solar entirely.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">BLACKNER MICHAEL J</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">8.910 kW DC · 11.500 kW AC · Tesla Powerwall 3 · 22 Modules</div>
+    <div class="solar-contractor">🔧 OUR WORLD ENERGY · License #326134</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=9203+N+Bank+St,+Kingman+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=9203+N+Bank+St+Kingman+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=9203+Bank+St" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=9203+N+Bank+St&citystatezip=Kingman+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<!-- ===== READY TO ISSUE ===== -->
+<div class="section-label s-ready">🟠 Ready To Issue — Approved But Contractor Never Pulled the Permit (Newest → Oldest)</div>
+
+<div class="card ready">
+  <div class="card-top">
+    <span class="badge ready">🟠 READY TO ISSUE · Dec 31, 2025 — 3.5+ MONTHS STALLED</span>
+    <span class="permit-num">BLD-2025-03647</span>
+  </div>
+  <div class="card-addr">1025 E Edie Cir</div>
+  <div class="card-meta">Kingman, AZ 86409 &nbsp;·&nbsp; Ready To Issue: Dec 31, 2025 &nbsp;·&nbsp; 3.5+ months, contractor never came back</div>
+  <div class="card-note orange">⚠️ Approved Dec 31 — contractor has not returned to pull the permit in over 3.5 months. Homeowner went through the whole approval process and got ghosted. They need a new contractor who will actually show up.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">PENWARDEN DONNA L</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">5.265 kW DC · 11.500 kW AC · Tesla Powerwall 3 · 13 Modules · 200A MPU</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=1025+E+Edie+Cir,+Kingman+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=1025+E+Edie+Cir+Kingman+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=1025+Edie+Cir" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=1025+E+Edie+Cir&citystatezip=Kingman+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="card ready">
+  <div class="card-top">
+    <span class="badge ready">🟠 READY TO ISSUE · Apr 6, 2026 — 11 DAYS</span>
+    <span class="permit-num">BLD-2026-00888</span>
+  </div>
+  <div class="card-addr">2798 E Punta Vista</div>
+  <div class="card-meta">Kingman, AZ 86409 &nbsp;·&nbsp; Ready To Issue: Apr 6, 2026 &nbsp;·&nbsp; Just approved, contractor hasn't pulled it yet</div>
+  <div class="card-note orange">⚠️ Just went to Ready To Issue 11 days ago. Contractor submitted plans and went quiet. Catch this early — homeowner is freshly approved and hasn't been waiting long enough to get frustrated yet. Strike now.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">FONSECA DAVID J & ALICE E</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">4.100 kW DC · 3.800 kW AC · Tesla Powerwall 3 · 10 Modules</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=2798+E+Punta+Vista,+Kingman+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=2798+E+Punta+Vista+Kingman+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=2798+Punta+Vista" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=2798+E+Punta+Vista&citystatezip=Kingman+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<!-- ===== RECENTLY ISSUED ===== -->
+<div class="section-label s-issued">⚡ Recently Issued — Panels Not Yet Up (Newest → Oldest)</div>
+
+<div class="card issued-new">
+  <div class="card-top">
+    <span class="badge issued-new">⚡ ISSUED · Apr 13, 2026 — 4 DAYS AGO</span>
+    <span class="permit-num">BLD-2026-00984</span>
+  </div>
+  <div class="card-addr">3030 E Devlin Ave</div>
+  <div class="card-meta">Kingman, AZ 86409 &nbsp;·&nbsp; Issued: Apr 13, 2026 &nbsp;·&nbsp; 4 days ago — no time to install yet</div>
+  <div class="card-note green">⚡ Permit issued 4 days ago. Installer is still scheduling — no chance panels are up yet. Knock now to check in, introduce yourself, and make sure the deal is still on track.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">BROWN JANICE</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">5.740 kW DC · Battery</div>
+    <div class="solar-contractor">🔧 INDEPENDENT SOLAR · License #344062</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=3030+E+Devlin+Ave,+Kingman+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=3030+E+Devlin+Ave+Kingman+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=3030+Devlin+Ave" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=3030+E+Devlin+Ave&citystatezip=Kingman+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="card issued-new">
+  <div class="card-top">
+    <span class="badge issued-new">⚡ ISSUED · Apr 8, 2026 — 9 DAYS AGO</span>
+    <span class="permit-num">BLD-2026-00945</span>
+  </div>
+  <div class="card-addr">3616 E Koval Dr</div>
+  <div class="card-meta">Kingman, AZ 86409 &nbsp;·&nbsp; Issued: Apr 8, 2026 &nbsp;·&nbsp; 9 days ago — install crew not scheduled yet</div>
+  <div class="card-note green">⚡ Issued 9 days ago. Installer is still coordinating — no panels on the roof yet. Knock and confirm the project is moving. If anything's off, you're right there.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">NASH DWAYNE & DENISE</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">7.380 kW DC · 5.760 kW AC · Tesla Powerwall 3 · 18 Modules</div>
+    <div class="solar-contractor">🔧 OUR WORLD ENERGY · License #326134</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=3616+E+Koval+Dr,+Kingman+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=3616+E+Koval+Dr+Kingman+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=3616+Koval+Dr" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=3616+E+Koval+Dr&citystatezip=Kingman+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="card issued-new">
+  <div class="card-top">
+    <span class="badge issued-new">⚡ ISSUED · Apr 8, 2026 — 9 DAYS AGO</span>
+    <span class="permit-num">BLD-2026-00961</span>
+  </div>
+  <div class="card-addr">2993 E Colina Vista</div>
+  <div class="card-meta">Kingman, AZ 86409 &nbsp;·&nbsp; Issued: Apr 8, 2026 &nbsp;·&nbsp; 9 days ago — install crew not scheduled yet</div>
+  <div class="card-note green">⚡ Freshly issued permit, 9 days old. No crew on site yet. Drop by while the install is still pending and make sure this deal is locked.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">WINTERS RICHARD J & SUSAN M</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">4.100 kW DC · 3.800 kW AC · Tesla Powerwall 3 · 10 Modules</div>
+    <div class="solar-contractor">🔧 OUR WORLD ENERGY · License #326134</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=2993+E+Colina+Vista,+Kingman+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=2993+E+Colina+Vista+Kingman+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=2993+Colina+Vista" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=2993+E+Colina+Vista&citystatezip=Kingman+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="card issued-new">
+  <div class="card-top">
+    <span class="badge issued-new">⚡ ISSUED · Apr 6, 2026 — 11 DAYS AGO</span>
+    <span class="permit-num">BLD-2026-00909</span>
+  </div>
+  <div class="card-addr">6350 N Quail Run Cir</div>
+  <div class="card-meta">Kingman, AZ 86409 &nbsp;·&nbsp; Issued: Apr 6, 2026 &nbsp;·&nbsp; 11 days ago — panels not installed yet</div>
+  <div class="card-note green">⚡ 11 days since permit issued — not enough time for an install crew to be on and off the roof. Verify the project is still on track and leave your card if it is.</div>
+  <div class="owner-row">
+    <div class="owner-icon">👤</div>
+    <div class="owner-info">
+      <div class="owner-label">Owner on Record</div>
+      <div class="owner-name">ZIMMERMANN JOHN E & BASILISA CPWRS</div>
+    </div>
+    <span class="owner-tag tag-hot">✓ VERIFIED</span>
+  </div>
+  <div class="solar-row">
+    <div class="solar-label">☀️ System on Permit</div>
+    <div class="solar-detail">3.690 kW DC · 3.800 kW AC · Tesla Powerwall 3 · 9 Modules</div>
+    <div class="solar-contractor">🔧 OUR WORLD ENERGY · License #326134</div>
+  </div>
+  <div class="btn-row">
+    <a class="btn btn-map" href="maps:?daddr=6350+N+Quail+Run+Cir,+Kingman+AZ" type="button">🗺 Apple Maps</a>
+    <a class="btn btn-sat" href="https://maps.google.com/maps?q=6350+N+Quail+Run+Cir+Kingman+AZ&t=k&z=20" target="_blank" type="button">🛰 Satellite</a>
+    <a class="btn btn-assessor" href="https://appsweb.mohave.gov/data_apps/assessor_parcel_search?searchTerm=6350+Quail+Run+Cir" target="_blank" type="button">👤 Owner</a>
+    <a class="btn btn-phone" href="https://www.truepeoplesearch.com/results?streetaddress=6350+N+Quail+Run+Cir&citystatezip=Kingman+AZ" target="_blank" type="button">📞 Phone</a>
+  </div>
+</div>
+
+<div class="source-note">
+  <strong>Source:</strong> Mohave County SmartGov Public Permit Portal · <a href="https://co-mohave-az.smartgovcommunity.com/PermittingPublic/PermitSearch" target="_blank">co-mohave-az.smartgovcommunity.com</a><br>
+  <strong>Owner data:</strong> Mohave County Assessor / CAMA GIS layer · <a href="https://www.mohave.gov/departments/assessor/assessor-search/" target="_blank">mohave.gov</a><br>
+  <strong>Zip code:</strong> 86409 — North Kingman (partner territory)<br>
+  Permits shown: Residential Building — Solar PV only · Open status only (no Finaled/Closed)
+</div>
+
+<p class="updated">Updated Apr 17, 2026</p>
+
+</body>
+</html>
