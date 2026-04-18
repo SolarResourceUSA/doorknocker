@@ -711,7 +711,7 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, sans-se
 
 /* ── Summary FAB ── */
 #summary-fab {
-  position: fixed; bottom: 28px; right: 16px; z-index: 999;
+  position: fixed; bottom: 90px; right: 16px; z-index: 999;
   background: #1d4ed8; color: #fff; border: none; border-radius: 28px;
   padding: 13px 18px; font-size: 14px; font-weight: 700;
   box-shadow: 0 4px 24px rgba(0,0,0,0.6);
@@ -720,6 +720,24 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, sans-se
   transition: opacity 0.2s;
 }
 #summary-fab.hidden { opacity: 0; pointer-events: none; }
+#save-fab {
+  position: fixed; bottom: 28px; right: 16px; z-index: 999;
+  background: #16a34a; color: #fff; border: none; border-radius: 28px;
+  padding: 13px 18px; font-size: 14px; font-weight: 700;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  cursor: pointer; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s, background 0.2s;
+}
+#save-fab.hidden { opacity: 0; pointer-events: none; }
+#save-fab:disabled { background: #555; cursor: default; }
+#sync-toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.85); color: #fff; padding: 10px 20px;
+  border-radius: 20px; font-size: 13px; z-index: 9999;
+  display: none; white-space: nowrap;
+}
+#sync-toast.show { display: block; }
 
 /* ── Backdrop ── */
 #backdrop {
@@ -897,6 +915,8 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, sans-se
 </div>
 
 <button id="summary-fab" type="button">📋 Summary</button>
+<button id="save-fab" type="button">💾 Save</button>
+<div id="sync-toast"></div>
 
 <!-- Summary modal -->
 <div id="summary-modal">
@@ -1251,6 +1271,20 @@ window.addEventListener('load', function() {
   document.getElementById('backdrop').addEventListener('click', closePanel);
   document.getElementById('summary-fab').addEventListener('click', openSummary);
   document.getElementById('summary-close').addEventListener('click', closeSummary);
+  document.getElementById('save-fab').addEventListener('click', saveToGitHub);
+
+  var origOpen = openPanel;
+  openPanel = function(id) {
+    origOpen(id);
+    document.getElementById('save-fab').classList.add('hidden');
+  };
+  var origClose = closePanel;
+  closePanel = function() {
+    origClose();
+    document.getElementById('save-fab').classList.remove('hidden');
+  };
+
+  loadFromGitHub();
 });
 
 // ============================================================
@@ -1462,6 +1496,95 @@ function openSummary() {
 
 function closeSummary() {
   document.getElementById('summary-modal').classList.remove('open');
+}
+
+// ============================================================
+// GITHUB SYNC
+// ============================================================
+var GH_TOKEN = localStorage.getItem('sr_gh_token') || '';
+var GH_API   = 'https://api.github.com/repos/SolarResourceUSA/doorknocker/contents/permit-data.json';
+var GH_RAW   = 'https://raw.githubusercontent.com/SolarResourceUSA/doorknocker/main/permit-data.json';
+
+function showToast(msg, dur) {
+  var t = document.getElementById('sync-toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, dur||2500);
+}
+
+function loadFromGitHub() {
+  fetch(GH_RAW + '?t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var changed = false;
+      if (data.outcomes) {
+        Object.keys(data.outcomes).forEach(function(id){
+          if (data.outcomes[id] && !outcomes[id]) { outcomes[id]=data.outcomes[id]; changed=true; }
+        });
+      }
+      if (data.notes) {
+        Object.keys(data.notes).forEach(function(id){
+          if (data.notes[id] && !notes[id]) { notes[id]=data.notes[id]; changed=true; }
+        });
+      }
+      if (changed) {
+        PERMITS.forEach(function(p){ refreshMarker(p.id); });
+        showToast('\u2705 Loaded saved session data');
+      }
+    })
+    .catch(function(){});
+}
+
+function saveToGitHub() {
+  if (!GH_TOKEN) {
+    var t = prompt('One-time setup: paste your GitHub Personal Access Token (saved locally, never uploaded):');
+    if (!t || !t.trim()) return;
+    GH_TOKEN = t.trim();
+    localStorage.setItem('sr_gh_token', GH_TOKEN);
+  }
+  saveCurrentNotes();
+  var btn = document.getElementById('save-fab');
+  btn.textContent = '\u23f3 Saving\u2026'; btn.disabled = true;
+  var TOKEN = GH_TOKEN;
+  var API = GH_API;
+  fetch(API, {headers:{'Authorization':'Bearer '+TOKEN}})
+    .then(function(r){ return r.json(); })
+    .then(function(meta){
+      var sha = meta.sha;
+      var cur = {outcomes:{}, notes:{}};
+      if (meta.content) {
+        try { cur = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g,''))))); } catch(e){}
+      }
+      var merged = {
+        outcomes: Object.assign({}, cur.outcomes||{}, outcomes),
+        notes:    Object.assign({}, cur.notes||{},    notes)
+      };
+      Object.keys(merged.outcomes).forEach(function(id){ if (!merged.outcomes[id]) delete merged.outcomes[id]; });
+      Object.keys(merged.notes).forEach(function(id){ if (!merged.notes[id]||!merged.notes[id].trim()) delete merged.notes[id]; });
+      var content = btoa(unescape(encodeURIComponent(JSON.stringify(merged,null,2))));
+      return fetch(API, {
+        method:'PUT',
+        headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
+        body: JSON.stringify({
+          message:'Session update \u2014 '+new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}),
+          content: content, sha: sha
+        })
+      });
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.commit && d.commit.sha) {
+        btn.textContent = '\u2705 Saved!';
+        showToast('\u2705 Saved \u2014 partner sees your updates on refresh', 3500);
+        setTimeout(function(){ btn.textContent = '\ud83d\udcbe Save'; btn.disabled=false; }, 3000);
+      } else {
+        btn.textContent = '\u274c Error'; btn.disabled=false;
+        showToast('\u274c Save failed \u2014 check connection', 3000);
+      }
+    })
+    .catch(function(e){
+      btn.textContent = '\u274c Error'; btn.disabled=false;
+      showToast('\u274c '+e.message, 3000);
+    });
 }
 </script>
 </body>
