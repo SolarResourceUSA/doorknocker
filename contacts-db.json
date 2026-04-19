@@ -59,6 +59,26 @@
       "follow_up_30d": "",
       "follow_up_90d": "",
       "source": "doorknocker_route"
+    },
+    {
+      "id": "2026-04-17-stop-11",
+      "captured": "2026-04-19T09:37:46.648Z",
+      "route_date": "2026-04-17",
+      "stop": 11,
+      "address": "905 Country Club Dr, Kingman AZ 86401",
+      "owner": "MOON ROBERT & JILL",
+      "sold_date": "Apr 13",
+      "sold_price": "$500,000",
+      "contact_name": "Michael & Kiana",
+      "phone": "",
+      "email": "",
+      "appt_date": "",
+      "appt_time": "",
+      "notes": "Michael & Kiana 12pm (spoke to daughter)",
+      "status": "appointment_pending",
+      "follow_up_30d": "",
+      "follow_up_90d": "",
+      "source": "doorknocker_route"
     }
   ]
 }
