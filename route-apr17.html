@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Door Knocker Route — Apr 17</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117; color: #f0f0f0;
+    padding: 16px; padding-bottom: 60px;
+    -webkit-text-size-adjust: 100%;
+  }
+  .header {
+    text-align: center; margin-bottom: 20px;
+    padding: 20px 16px 16px;
+    background: linear-gradient(135deg, #1a1f2e, #0d1a0d);
+    border-radius: 16px; border: 1px solid #2a3a2a;
+  }
+  .logo { font-size: 11px; letter-spacing: 2px; color: #4caf50; text-transform: uppercase; margin-bottom: 6px; }
+  .header h1 { font-size: 20px; font-weight: 700; color: #fff; }
+  .header .sub { font-size: 13px; color: #888; margin-top: 4px; }
+  .header .zone { font-size: 11px; color: #4caf50; margin-top: 6px; background: #0d1a0d; padding: 4px 10px; border-radius: 8px; display: inline-block; }
+
+  #sync-bar {
+    display: flex; align-items: center; justify-content: center;
+    background: #111827; border: 1px solid #1e293b; border-radius: 10px;
+    padding: 8px 14px; margin-bottom: 16px; font-size: 12px; color: #64748b;
+    min-height: 36px; transition: all 0.3s;
+  }
+  #sync-bar.saving  { border-color: #1e4d7a; color: #4fc3f7; }
+  #sync-bar.saved   { border-color: #2e5e2e; color: #66bb6a; }
+  #sync-bar.error   { border-color: #7f1d1d; color: #f87171; }
+  #sync-bar.loading { border-color: #4a2e00; color: #fbbf24; }
+
+  .route-btns { display: flex; gap: 8px; margin-bottom: 20px; }
+  .route-btn {
+    flex: 1; display: block;
+    background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    color: #fff; text-decoration: none; text-align: center;
+    padding: 14px 10px; border-radius: 14px;
+    font-size: 14px; font-weight: 700;
+    box-shadow: 0 4px 15px rgba(46,125,50,0.4);
+  }
+  .route-btn.b { background: linear-gradient(135deg, #1565c0, #0d47a1); box-shadow: 0 4px 15px rgba(21,101,192,0.4); }
+
+  .stop {
+    background: #1a1f2e; border-radius: 16px;
+    margin-bottom: 14px; overflow: hidden;
+    border: 2px solid #252d40; transition: border-color 0.2s;
+  }
+  .stop-header {
+    display: flex; align-items: center;
+    justify-content: space-between; padding: 12px 16px;
+    background: #141926; border-bottom: 1px solid #252d40;
+  }
+  .stop-header-left { display: flex; align-items: center; gap: 8px; }
+  .stop-num { background: #2e7d32; color: #fff; font-size: 13px; font-weight: 700; border-radius: 20px; padding: 3px 10px; }
+  .stop-num.corp    { background: #6a1b9a; }
+  .stop-num.trust   { background: #4a3000; }
+  .stop-num.unknown { background: #555; }
+  .distance { font-size: 12px; color: #888; background: #0f1117; padding: 3px 10px; border-radius: 20px; }
+
+  .stop-body { padding: 14px 16px; }
+  .address { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 10px; }
+
+  .btn-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .nav-btn    { display: inline-block; background: #1a3a5c; color: #4fc3f7; text-decoration: none; font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 10px; white-space: nowrap; border: 1px solid #1e4d7a; flex-shrink: 0; }
+  .roof-btn   { display: inline-block; background: #1a2a1a; color: #81c784; text-decoration: none; font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 10px; white-space: nowrap; border: 1px solid #2e5e2e; flex-shrink: 0; }
+  .lookup-btn { display: inline-block; background: #1e1a2e; color: #b39ddb; text-decoration: none; font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 10px; white-space: nowrap; border: 1px solid #4a3a6e; flex-shrink: 0; }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .info-item { background: #0f1117; border-radius: 10px; padding: 9px 11px; }
+  .info-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 3px; }
+  .info-value { font-size: 15px; font-weight: 600; color: #f0f0f0; }
+  .info-value.green  { color: #66bb6a; }
+  .info-value.blue   { color: #42a5f5; }
+
+  .owner-row { background: #0f1117; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .owner-icon { font-size: 18px; flex-shrink: 0; }
+  .owner-info { flex: 1; }
+  .owner-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
+  .owner-name { font-size: 15px; font-weight: 600; color: #fff; }
+  .owner-tag { font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; flex-shrink: 0; }
+  .tag-hot     { background: #1b3a1b; color: #66bb6a; }
+  .tag-corp    { background: #2a1040; color: #ce93d8; }
+  .tag-trust   { background: #2a1a00; color: #ffcc80; }
+  .tag-unknown { background: #2a2a2a; color: #888; }
+
+  .fresh-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-left: 6px; letter-spacing: 0.5px; vertical-align: middle; }
+  .badge-hot   { background: #3a1a00; color: #ff9800; }
+  .badge-week  { background: #1b3a1b; color: #66bb6a; }
+  .badge-month { background: #1a2a3a; color: #64b5f6; }
+
+  .outcome-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .outcome-btns { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+  .obtn {
+    background: #1e2438; color: #555; border: 1.5px solid #2a3040;
+    border-radius: 20px; padding: 8px 14px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    -webkit-appearance: none; appearance: none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    min-height: 36px; touch-action: manipulation;
+  }
+
+  /* Contact capture form — appears when Appt Set is tapped */
+  .contact-form {
+    background: #0d1a0d; border: 1.5px solid #2e5e2e; border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 12px; display: none;
+  }
+  .contact-form.open { display: block; animation: slideDown 0.2s ease; }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .contact-form-title { font-size: 11px; font-weight: 700; color: #4caf50; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .contact-input {
+    width: 100%; background: #0f1117; border: 1.5px solid #1e3a1e;
+    border-radius: 8px; color: #f0f0f0; font-size: 15px;
+    font-family: inherit; padding: 10px 12px; margin-bottom: 8px;
+    outline: none; -webkit-appearance: none; appearance: none; min-height: 44px;
+  }
+  .contact-input:focus { border-color: #4caf50; }
+  .contact-input::placeholder { color: #3a5a3a; }
+  .contact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .contact-row .contact-input { margin-bottom: 0; }
+
+  .notes-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; }
+  .notes-input {
+    width: 100%; background: #0f1117; border: 1.5px solid #252d40;
+    border-radius: 10px; color: #f0f0f0; font-size: 14px;
+    font-family: inherit; padding: 10px 12px; resize: none;
+    outline: none; min-height: 64px; line-height: 1.5;
+    -webkit-appearance: none; appearance: none;
+  }
+  .notes-input:focus { border-color: #2e7d32; }
+  .notes-input::placeholder { color: #333; }
+
+  .notes-footer { display: flex; justify-content: flex-end; margin-top: 6px; }
+  .update-btn {
+    background: #1a2a1a; color: #66bb6a; border: 1px solid #2e5e2e;
+    border-radius: 8px; padding: 5px 14px; font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: inherit; letter-spacing: 0.5px;
+    -webkit-appearance: none; appearance: none;
+    touch-action: manipulation; -webkit-tap-highlight-color: rgba(0,0,0,0);
+    transition: background 0.15s, color 0.15s;
+  }
+  .update-btn.confirming { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+
+  .bottom-bar { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .gen-btn {
+    background: #1a3a5c; color: #4fc3f7; border: 1.5px solid #1e4d7a;
+    border-radius: 14px; padding: 16px; font-size: 15px; font-weight: 700;
+    text-align: center; cursor: pointer; font-family: inherit;
+    -webkit-appearance: none; appearance: none; width: 100%; touch-action: manipulation;
+  }
+  .summary-wrap { display: none; margin-top: 10px; }
+  .summary-text {
+    width: 100%; background: #0f1117; border: 1.5px solid #252d40;
+    border-radius: 12px; color: #ccc; font-size: 13px;
+    font-family: 'Courier New', monospace; padding: 14px;
+    min-height: 200px; line-height: 1.7; resize: vertical; outline: none;
+    -webkit-appearance: none; appearance: none;
+  }
+  .copy-btn {
+    margin-top: 8px; width: 100%; background: #2e7d32; color: #fff;
+    border: none; border-radius: 10px; padding: 13px; font-size: 14px;
+    font-weight: 700; cursor: pointer; font-family: inherit; touch-action: manipulation;
+  }
+  .save-tip { text-align: center; font-size: 11px; color: #444; margin-top: 6px; }
+  .footer { text-align: center; margin-top: 24px; font-size: 11px; color: #333; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">☀️ Solar Resource USA</div>
+  <h1>Door Knocker Route</h1>
+  <div class="sub">April 17, 2026 &nbsp;·&nbsp; Starting: 116 N 6th St, Kingman</div>
+  <div class="zone">📍 South of Hwy 93 · 86401 · 20 Stops · Sold in last 90 days</div>
+</div>
+
+<div id="sync-bar">⟳ Loading saved data…</div>
+
+<div class="route-btns">
+  <a class="route-btn" href="https://www.google.com/maps/dir/116+N+6th+St,+Kingman,+AZ+86401/2269+Mesa+Cir,+Kingman,+AZ+86401/2300+Phoenix+Ave,+Kingman,+AZ+86401/2131+Ashfork+Ave,+Kingman,+AZ+86401/2209+Los+Angeles+St,+Kingman,+AZ+86401/2520+Ashfork+Ave,+Kingman,+AZ+86401/2414+Ricca+Dr,+Kingman,+AZ+86401/1974+Miami+Ave,+Kingman,+AZ+86401/1943+Hope+Ave,+Kingman,+AZ+86401/1810+Airfield+Ave,+Kingman,+AZ+86401">🗺️ Stops 1–10</a>
+  <a class="route-btn b" href="https://www.google.com/maps/dir/1810+Airfield+Ave,+Kingman,+AZ+86401/1732+Miami+Ave,+Kingman,+AZ+86401/905+Country+Club+Dr,+Kingman,+AZ+86401/2601+Chambers+Ave,+Kingman,+AZ+86401/2822+Lillie+Ave,+Kingman,+AZ+86401/2303+Ginger+St,+Kingman,+AZ+86401/3369+Whitehead+Ave,+Kingman,+AZ+86401/3165+Simms+Ave,+Kingman,+AZ+86401/3268+Brenda+Ave,+Kingman,+AZ+86401/3170+N+Melody+St,+Kingman,+AZ+86401/3327+N+Central+St,+Kingman,+AZ+86401/3389+N+Yavapai+St,+Kingman,+AZ+86401">🗺️ Stops 11–20</a>
+</div>
+
+<!-- STOPS 1-20 -->
+<div class="stop" id="stop-0"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 1</span></div><span class="distance">📍 1.52 mi</span></div><div class="stop-body"><div class="address">2269 Mesa Cir<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=2269+Mesa+Cir,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=2269+Mesa+Cir,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=TYLOR+MOLINE&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$540,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 13 <span class="fresh-badge badge-hot">4 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">5 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">2,394 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">MOLINE TYLOR & CAITLIN</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-0"><button type="button" class="obtn" data-stop="0" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="0" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="0" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="0" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="0" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="0" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-0"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-0" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-0" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-0" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-0"><input type="time" class="contact-input" id="cf-time-0"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-0" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-1"><div class="stop-header"><div class="stop-header-left"><span class="stop-num unknown">STOP 2</span></div><span class="distance">📍 1.71 mi</span></div><div class="stop-body"><div class="address">2300 Phoenix Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=2300+Phoenix+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=2300+Phoenix+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?streetaddress=2300+Phoenix+Ave&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$262,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 16 <span class="fresh-badge badge-hot">1 DAY AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,325 sqft</div></div></div><div class="owner-row"><div class="owner-icon">⚠️</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name" style="color:#888;">Not found — verify at assessor</div></div><span class="owner-tag tag-unknown">UNVERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-1"><button type="button" class="obtn" data-stop="1" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="1" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="1" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="1" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="1" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="1" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-1"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-1" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-1" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-1" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-1"><input type="time" class="contact-input" id="cf-time-1"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-1" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-2"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 3</span></div><span class="distance">📍 1.65 mi</span></div><div class="stop-body"><div class="address">2131 Ashfork Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=2131+Ashfork+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=2131+Ashfork+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=ROSA+MICHEL+LOPEZ&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$250,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 7 <span class="fresh-badge badge-week">10 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,288 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">MICHEL LOPEZ ROSA ISELA</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-2"><button type="button" class="obtn" data-stop="2" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="2" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="2" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="2" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="2" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="2" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-2"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-2" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-2" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-2" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-2"><input type="time" class="contact-input" id="cf-time-2"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-2" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-3"><div class="stop-header"><div class="stop-header-left"><span class="stop-num trust">STOP 4</span></div><span class="distance">📍 1.95 mi</span></div><div class="stop-body"><div class="address">2209 Los Angeles St<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=2209+Los+Angeles+St,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=2209+Los+Angeles+St,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=RAY+GERUE&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$260,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 10 <span class="fresh-badge badge-hot">7 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">2,296 sqft</div></div></div><div class="owner-row"><div class="owner-icon">📋</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">GERUE RAY A & PATRICIA D TRUSTEES</div></div><span class="owner-tag tag-trust">TRUST</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-3"><button type="button" class="obtn" data-stop="3" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="3" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="3" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="3" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="3" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="3" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-3"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-3" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-3" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-3" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-3"><input type="time" class="contact-input" id="cf-time-3"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-3" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-4"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 5</span></div><span class="distance">📍 2.22 mi</span></div><div class="stop-body"><div class="address">2520 Ashfork Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=2520+Ashfork+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=2520+Ashfork+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=CHARLES+FULLER&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$240,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 8 <span class="fresh-badge badge-week">9 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">4 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,256 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">FULLER CHARLES RUSSELL & AMY ANN</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-4"><button type="button" class="obtn" data-stop="4" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="4" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="4" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="4" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="4" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="4" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-4"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-4" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-4" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-4" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-4"><input type="time" class="contact-input" id="cf-time-4"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-4" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-5"><div class="stop-header"><div class="stop-header-left"><span class="stop-num trust">STOP 6</span></div><span class="distance">📍 2.30 mi</span></div><div class="stop-body"><div class="address">2414 Ricca Dr<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=2414+Ricca+Dr,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=2414+Ricca+Dr,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=JOSEPH+COMMISSO&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$225,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 2 <span class="fresh-badge badge-week">15 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">2,116 sqft</div></div></div><div class="owner-row"><div class="owner-icon">📋</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">COMMISSO JOSEPH (The Joseph Commisso Trust)</div></div><span class="owner-tag tag-trust">TRUST</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-5"><button type="button" class="obtn" data-stop="5" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="5" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="5" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="5" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="5" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="5" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-5"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-5" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-5" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-5" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-5"><input type="time" class="contact-input" id="cf-time-5"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-5" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-6"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 7</span></div><span class="distance">📍 2.03 mi</span></div><div class="stop-body"><div class="address">1974 Miami Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=1974+Miami+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=1974+Miami+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=MICHAEL+ONEILL&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$184,900</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 14 <span class="fresh-badge badge-hot">3 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,166 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">ONEILL MICHAEL STEVEN</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-6"><button type="button" class="obtn" data-stop="6" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="6" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="6" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="6" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="6" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="6" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-6"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-6" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-6" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-6" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-6"><input type="time" class="contact-input" id="cf-time-6"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-6" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-7"><div class="stop-header"><div class="stop-header-left"><span class="stop-num corp">STOP 8</span></div><span class="distance">📍 1.86 mi</span></div><div class="stop-body"><div class="address">1943 Hope Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=1943+Hope+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=1943+Hope+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?streetaddress=1943+Hope+Ave&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$190,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 2 <span class="fresh-badge badge-week">15 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 1 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,004 sqft</div></div></div><div class="owner-row"><div class="owner-icon">🏢</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">EIGHTY 3 PROPERTIES LLC</div></div><span class="owner-tag tag-corp">LLC</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-7"><button type="button" class="obtn" data-stop="7" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="7" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="7" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="7" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="7" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="7" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-7"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-7" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-7" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-7" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-7"><input type="time" class="contact-input" id="cf-time-7"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-7" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-8"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 9</span></div><span class="distance">📍 1.74 mi</span></div><div class="stop-body"><div class="address">1810 Airfield Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=1810+Airfield+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=1810+Airfield+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=ARNOLD+FREDERICKSON&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$210,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 14 <span class="fresh-badge badge-hot">3 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">2 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">910 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">FREDERICKSON ARNOLD M & ASHLEY E</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-8"><button type="button" class="obtn" data-stop="8" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="8" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="8" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="8" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="8" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="8" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-8"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-8" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-8" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-8" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-8"><input type="time" class="contact-input" id="cf-time-8"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-8" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-9"><div class="stop-header"><div class="stop-header-left"><span class="stop-num trust">STOP 10</span></div><span class="distance">📍 1.84 mi</span></div><div class="stop-body"><div class="address">1732 Miami Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=1732+Miami+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=1732+Miami+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?streetaddress=1732+Miami+Ave&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$183,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 3 <span class="fresh-badge badge-week">14 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,298 sqft</div></div></div><div class="owner-row"><div class="owner-icon">📋</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">SHER GINETTE / COTTINGHAM SUSAN (Trustees)</div></div><span class="owner-tag tag-trust">TRUST</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-9"><button type="button" class="obtn" data-stop="9" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="9" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="9" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="9" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="9" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="9" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-9"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-9" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-9" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-9" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-9"><input type="time" class="contact-input" id="cf-time-9"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-9" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-10"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 11</span></div><span class="distance">📍 1.71 mi</span></div><div class="stop-body"><div class="address">905 Country Club Dr<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=905+Country+Club+Dr,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=905+Country+Club+Dr,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=ROBERT+MOON&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$500,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 13 <span class="fresh-badge badge-hot">4 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">4 bd / 4 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">2,751 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">MOON ROBERT & JILL</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-10"><button type="button" class="obtn" data-stop="10" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="10" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="10" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="10" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="10" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="10" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-10"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-10" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-10" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-10" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-10"><input type="time" class="contact-input" id="cf-time-10"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-10" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-11"><div class="stop-header"><div class="stop-header-left"><span class="stop-num unknown">STOP 12</span></div><span class="distance">📍 2.15 mi</span></div><div class="stop-body"><div class="address">2601 Chambers Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=2601+Chambers+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=2601+Chambers+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?streetaddress=2601+Chambers+Ave&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$246,200</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 16 <span class="fresh-badge badge-hot">1 DAY AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,175 sqft</div></div></div><div class="owner-row"><div class="owner-icon">⚠️</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name" style="color:#888;">Not found — verify at assessor</div></div><span class="owner-tag tag-unknown">UNVERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-11"><button type="button" class="obtn" data-stop="11" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="11" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="11" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="11" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="11" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="11" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-11"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-11" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-11" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-11" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-11"><input type="time" class="contact-input" id="cf-time-11"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-11" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-12"><div class="stop-header"><div class="stop-header-left"><span class="stop-num corp">STOP 13</span></div><span class="distance">📍 2.30 mi</span></div><div class="stop-body"><div class="address">2822 Lillie Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=2822+Lillie+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=2822+Lillie+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?streetaddress=2822+Lillie+Ave&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$247,500</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 8 <span class="fresh-badge badge-week">9 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,399 sqft</div></div></div><div class="owner-row"><div class="owner-icon">🏢</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">DESERT UNICORNS II LLC</div></div><span class="owner-tag tag-corp">LLC</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-12"><button type="button" class="obtn" data-stop="12" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="12" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="12" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="12" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="12" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="12" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-12"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-12" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-12" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-12" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-12"><input type="time" class="contact-input" id="cf-time-12"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-12" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-13"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 14</span></div><span class="distance">📍 2.59 mi</span></div><div class="stop-body"><div class="address">2303 Ginger St<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=2303+Ginger+St,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=2303+Ginger+St,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=JAN+RICHTER&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$369,900</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 13 <span class="fresh-badge badge-hot">4 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,600 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">RICHTER JAN JR & DONNA</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-13"><button type="button" class="obtn" data-stop="13" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="13" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="13" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="13" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="13" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="13" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-13"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-13" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-13" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-13" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-13"><input type="time" class="contact-input" id="cf-time-13"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-13" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-14"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 15</span></div><span class="distance">📍 3.04 mi</span></div><div class="stop-body"><div class="address">3369 Whitehead Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=3369+Whitehead+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=3369+Whitehead+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=TROY+MOORE&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$318,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 8 <span class="fresh-badge badge-week">9 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,491 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">MOORE TROY P & CAMORAS CARLEY</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-14"><button type="button" class="obtn" data-stop="14" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="14" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="14" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="14" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="14" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="14" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-14"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-14" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-14" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-14" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-14"><input type="time" class="contact-input" id="cf-time-14"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-14" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-15"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 16</span></div><span class="distance">📍 2.73 mi</span></div><div class="stop-body"><div class="address">3165 Simms Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=3165+Simms+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=3165+Simms+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=ANTHONY+CENTENO&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$570,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 10 <span class="fresh-badge badge-hot">7 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">6 bd / 4 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">3,782 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">CENTENO ANTHONY J & TAMARA R</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-15"><button type="button" class="obtn" data-stop="15" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="15" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="15" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="15" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="15" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="15" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-15"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-15" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-15" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-15" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-15"><input type="time" class="contact-input" id="cf-time-15"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-15" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-16"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 17</span></div><span class="distance">📍 2.88 mi</span></div><div class="stop-body"><div class="address">3268 Brenda Ave<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=3268+Brenda+Ave,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=3268+Brenda+Ave,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=STEVAN+RADMANOVICH&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$375,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 15 <span class="fresh-badge badge-hot">2 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">4 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,724 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">RADMANOVICH STEVAN R & JEANIE</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-16"><button type="button" class="obtn" data-stop="16" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="16" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="16" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="16" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="16" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="16" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-16"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-16" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-16" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-16" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-16"><input type="time" class="contact-input" id="cf-time-16"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-16" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-17"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 18</span></div><span class="distance">📍 3.16 mi</span></div><div class="stop-body"><div class="address">3170 N Melody St<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=3170+N+Melody+St,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=3170+N+Melody+St,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=LINO+RIOS&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$240,000</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 10 <span class="fresh-badge badge-hot">7 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,182 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">RIOS LINO P & GARCIA ANA L S</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-17"><button type="button" class="obtn" data-stop="17" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="17" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="17" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="17" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="17" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="17" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-17"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-17" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-17" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-17" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-17"><input type="time" class="contact-input" id="cf-time-17"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-17" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-18"><div class="stop-header"><div class="stop-header-left"><span class="stop-num">STOP 19</span></div><span class="distance">📍 3.59 mi</span></div><div class="stop-body"><div class="address">3327 N Central St<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=3327+N+Central+St,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=3327+N+Central+St,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=MAHMOOD+KHAN&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$249,900</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 16 <span class="fresh-badge badge-hot">1 DAY AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,169 sqft</div></div></div><div class="owner-row"><div class="owner-icon">👤</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">KHAN MAHMOOD & MAHMOOD AISHA</div></div><span class="owner-tag tag-hot">✓ VERIFIED</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-18"><button type="button" class="obtn" data-stop="18" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="18" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="18" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="18" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="18" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="18" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-18"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-18" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-18" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-18" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-18"><input type="time" class="contact-input" id="cf-time-18"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-18" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="stop" id="stop-19"><div class="stop-header"><div class="stop-header-left"><span class="stop-num trust">STOP 20</span></div><span class="distance">📍 3.84 mi</span></div><div class="stop-body"><div class="address">3389 N Yavapai St<br><span style="font-size:13px;color:#888;">Kingman, AZ 86401</span></div><div class="btn-row"><a class="nav-btn" href="maps:?daddr=3389+N+Yavapai+St,+Kingman,+AZ+86401">🧭 Navigate ›</a><a class="roof-btn" href="https://maps.google.com/maps?q=3389+N+Yavapai+St,+Kingman,+AZ+86401&t=k&z=20">🛰️ View Roof</a><a class="lookup-btn" href="https://www.truepeoplesearch.com/results?name=CHRISTINE+LOR&citystatezip=Kingman+AZ+86401">🔍 Find #</a></div><div class="info-grid"><div class="info-item"><div class="info-label">Sold Price</div><div class="info-value green">$239,900</div></div><div class="info-item"><div class="info-label">Sold Date</div><div class="info-value">Apr 7 <span class="fresh-badge badge-week">10 DAYS AGO</span></div></div><div class="info-item"><div class="info-label">Beds / Baths</div><div class="info-value blue">3 bd / 2 ba</div></div><div class="info-item"><div class="info-label">Sq Footage</div><div class="info-value">1,167 sqft</div></div></div><div class="owner-row"><div class="owner-icon">📋</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name">CHRISTINE FAN LOR LIVING TRUST (Trustee: LOR CHRISTINE FAN)</div></div><span class="owner-tag tag-trust">TRUST</span></div><div class="outcome-label">Outcome</div><div class="outcome-btns" id="btns-19"><button type="button" class="obtn" data-stop="19" data-status="nih">🚪 Nobody Home</button><button type="button" class="obtn" data-stop="19" data-status="apptset">📅 Appt Set</button><button type="button" class="obtn" data-stop="19" data-status="notmovedin">🏠 Hasn't Moved In</button><button type="button" class="obtn" data-stop="19" data-status="ni">👎 Not Interested</button><button type="button" class="obtn" data-stop="19" data-status="renter">🏘️ Renter</button><button type="button" class="obtn" data-stop="19" data-status="hassolar">☀️ Has Solar</button></div><div class="contact-form" id="cf-19"><div class="contact-form-title">📋 Appointment Contact</div><input type="text" class="contact-input" id="cf-name-19" placeholder="Name of person you spoke to"><input type="tel" class="contact-input" id="cf-phone-19" placeholder="Phone number"><input type="email" class="contact-input" id="cf-email-19" placeholder="Email (optional)"><div class="contact-row"><input type="date" class="contact-input" id="cf-date-19"><input type="time" class="contact-input" id="cf-time-19"></div></div><div class="notes-label">Notes</div><textarea class="notes-input" id="notes-19" placeholder="Add notes here…"></textarea></div></div>
+
+<div class="bottom-bar">
+  <button type="button" class="gen-btn" id="gen-btn">📋 Generate Day Summary</button>
+  <div class="summary-wrap" id="summary-wrap">
+    <textarea class="summary-text" id="summary-text" readonly></textarea>
+    <button type="button" class="copy-btn" id="copy-btn">Copy to Clipboard — Paste to Claude</button>
+  </div>
+  <div class="save-tip">Outcomes auto-save to GitHub · Tap 💾 Update after each stop · Appointments saved to contacts database</div>
+</div>
+
+<div class="footer">
+  Owner data: Mohave County Assessor · Zillow recently sold · 90-day window · South of Hwy 93 · April 17, 2026 · Solar Resource USA
+</div>
+
+<script>
+/* PAT stored in localStorage — never hardcoded in source */
+var PAT = localStorage.getItem('sru_pat') || '';
+var REPO  = 'SolarResourceUSA/doorknocker';
+var HDR   = {'Authorization':'token '+PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'};
+var BASE  = 'https://api.github.com/repos/'+REPO+'/contents/';
+
+var STOPS = [
+  {addr:'2269 Mesa Cir',       owner:'MOLINE TYLOR & CAITLIN',                      sold:'Apr 13',price:'$540,000'},
+  {addr:'2300 Phoenix Ave',    owner:'UNVERIFIED',                                   sold:'Apr 16',price:'$262,000'},
+  {addr:'2131 Ashfork Ave',    owner:'MICHEL LOPEZ ROSA ISELA',                     sold:'Apr 7', price:'$250,000'},
+  {addr:'2209 Los Angeles St', owner:'GERUE RAY A & PATRICIA D TRUSTEES',           sold:'Apr 10',price:'$260,000'},
+  {addr:'2520 Ashfork Ave',    owner:'FULLER CHARLES RUSSELL & AMY ANN',            sold:'Apr 8', price:'$240,000'},
+  {addr:'2414 Ricca Dr',       owner:'COMMISSO JOSEPH (Trust)',                      sold:'Apr 2', price:'$225,000'},
+  {addr:'1974 Miami Ave',      owner:'ONEILL MICHAEL STEVEN',                       sold:'Apr 14',price:'$184,900'},
+  {addr:'1943 Hope Ave',       owner:'EIGHTY 3 PROPERTIES LLC',                     sold:'Apr 2', price:'$190,000'},
+  {addr:'1810 Airfield Ave',   owner:'FREDERICKSON ARNOLD M & ASHLEY E',            sold:'Apr 14',price:'$210,000'},
+  {addr:'1732 Miami Ave',      owner:'SHER GINETTE / COTTINGHAM SUSAN (Trustees)',  sold:'Apr 3', price:'$183,000'},
+  {addr:'905 Country Club Dr', owner:'MOON ROBERT & JILL',                          sold:'Apr 13',price:'$500,000'},
+  {addr:'2601 Chambers Ave',   owner:'UNVERIFIED',                                   sold:'Apr 16',price:'$246,200'},
+  {addr:'2822 Lillie Ave',     owner:'DESERT UNICORNS II LLC',                      sold:'Apr 8', price:'$247,500'},
+  {addr:'2303 Ginger St',      owner:'RICHTER JAN JR & DONNA',                     sold:'Apr 13',price:'$369,900'},
+  {addr:'3369 Whitehead Ave',  owner:'MOORE TROY P & CAMORAS CARLEY',              sold:'Apr 8', price:'$318,000'},
+  {addr:'3165 Simms Ave',      owner:'CENTENO ANTHONY J & TAMARA R',               sold:'Apr 10',price:'$570,000'},
+  {addr:'3268 Brenda Ave',     owner:'RADMANOVICH STEVAN R & JEANIE',              sold:'Apr 15',price:'$375,000'},
+  {addr:'3170 N Melody St',    owner:'RIOS LINO P & GARCIA ANA L S',               sold:'Apr 10',price:'$240,000'},
+  {addr:'3327 N Central St',   owner:'KHAN MAHMOOD & MAHMOOD AISHA',               sold:'Apr 16',price:'$249,900'},
+  {addr:'3389 N Yavapai St',   owner:'CHRISTINE FAN LOR LIVING TRUST',             sold:'Apr 7', price:'$239,900'}
+];
+
+var EMPTY_CONTACT = function(){ return {name:'',phone:'',email:'',appt_date:'',appt_time:''}; };
+var state = {
+  statuses: Array(20).fill(''),
+  notes:    Array(20).fill(''),
+  contacts: Array.from({length:20}, EMPTY_CONTACT)
+};
+
+var STYLES = {
+  nih:        {bg:'#2a2a2a',color:'#ccc',  border:'#555',   card:'#555'},
+  apptset:    {bg:'#1b3a1b',color:'#66bb6a',border:'#2e7d32',card:'#2e7d32'},
+  notmovedin: {bg:'#0d2645',color:'#42a5f5',border:'#1565c0',card:'#1565c0'},
+  ni:         {bg:'#3a0d0d',color:'#ef9a9a',border:'#7f1d1d',card:'#7f1d1d'},
+  renter:     {bg:'#2d1f14',color:'#ffcc80',border:'#5d4037',card:'#5d4037'},
+  hassolar:   {bg:'#2a200a',color:'#ffd54f',border:'#f57f17',card:'#f57f17'}
+};
+
+var STATUS_NAMES = {nih:'Nobody Home',apptset:'Appt Set',notmovedin:"Hasn't Moved In",ni:'Not Interested',renter:'Renter',hassolar:'Has Solar'};
+
+/* ── sync bar ── */
+function syncBar(cls, msg){ var b=document.getElementById('sync-bar'); b.className=cls; b.textContent=msg; }
+
+/* ── github helpers ── */
+var _routeSha = null, _saveTimer = null;
+
+function readContact(idx){
+  return {
+    name:      (document.getElementById('cf-name-'+idx)||{}).value||'',
+    phone:     (document.getElementById('cf-phone-'+idx)||{}).value||'',
+    email:     (document.getElementById('cf-email-'+idx)||{}).value||'',
+    appt_date: (document.getElementById('cf-date-'+idx)||{}).value||'',
+    appt_time: (document.getElementById('cf-time-'+idx)||{}).value||''
+  };
+}
+
+function fillContact(idx, c){
+  if(!c) return;
+  var fields = {name:'cf-name-',phone:'cf-phone-',email:'cf-email-',appt_date:'cf-date-',appt_time:'cf-time-'};
+  Object.keys(fields).forEach(function(k){
+    var el = document.getElementById(fields[k]+idx);
+    if(el && c[k]) el.value = c[k];
+  });
+}
+
+function scheduleSave(){ if(_saveTimer) clearTimeout(_saveTimer); _saveTimer = setTimeout(pushRoute, 1500); }
+
+function pushRoute(){
+  syncBar('saving','⟳ Saving…');
+  var payload = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  var body = {message:'Route update '+new Date().toISOString(), content:payload};
+  if(_routeSha) body.sha = _routeSha;
+  fetch(BASE+'route-state-2026-04-17.json',{method:'PUT',headers:HDR,body:JSON.stringify(body)})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.content) _routeSha=d.content.sha;
+      var t=new Date(),h=t.getHours(),m=t.getMinutes(),ap=h>=12?'PM':'AM';
+      h=h%12||12;
+      syncBar('saved','✓ Saved '+h+':'+(m<10?'0'+m:m)+' '+ap);
+    })
+    .catch(function(){ syncBar('error','⚠️ Save failed — check connection'); });
+}
+
+function pushContactsDB(idx){
+  var c = state.contacts[idx];
+  var s = STOPS[idx];
+  var record = {
+    id:          '2026-04-17-stop-'+(idx+1),
+    captured:    new Date().toISOString(),
+    route_date:  '2026-04-17',
+    stop:        idx+1,
+    address:     s.addr+', Kingman AZ 86401',
+    owner:       s.owner,
+    sold_date:   s.sold,
+    sold_price:  s.price,
+    contact_name:c.name,
+    phone:       c.phone,
+    email:       c.email,
+    appt_date:   c.appt_date,
+    appt_time:   c.appt_time,
+    notes:       state.notes[idx],
+    status:      'appointment_pending',
+    follow_up_30d: '',
+    follow_up_90d: '',
+    source:      'doorknocker_route'
+  };
+  var url = BASE+'contacts-db.json';
+  var existing = {contacts:[]}, sha = null;
+  fetch(url,{headers:HDR})
+    .then(function(r){ if(r.ok) return r.json(); return null; })
+    .then(function(d){
+      if(d){ sha=d.sha; existing=JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))))); }
+      var i = existing.contacts.findIndex(function(x){ return x.id===record.id; });
+      if(i>=0) existing.contacts[i]=record; else existing.contacts.push(record);
+      var payload = btoa(unescape(encodeURIComponent(JSON.stringify(existing,null,2))));
+      var body = {message:'Contact: '+(c.name||s.addr)+' — '+new Date().toISOString(), content:payload};
+      if(sha) body.sha=sha;
+      return fetch(url,{method:'PUT',headers:HDR,body:JSON.stringify(body)});
+    })
+    .catch(function(){});
+}
+
+function loadFromGitHub(){
+  syncBar('loading','⟳ Loading saved data…');
+  fetch(BASE+'route-state-2026-04-17.json',{headers:HDR})
+    .then(function(r){ if(r.status===404){syncBar('saved','✓ Fresh start — ready'); return null;} return r.json(); })
+    .then(function(d){
+      if(!d) return;
+      if(d.sha) _routeSha=d.sha;
+      var saved = JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))));
+      if(saved.statuses) saved.statuses.forEach(function(s,i){ if(s){state.statuses[i]=s; applyOutcome(i,s);} });
+      if(saved.notes)    saved.notes.forEach(function(n,i){ if(n){state.notes[i]=n; var ta=document.getElementById('notes-'+i); if(ta) ta.value=n;} });
+      if(saved.contacts) saved.contacts.forEach(function(c,i){ if(c&&c.name){state.contacts[i]=c; fillContact(i,c);} });
+      syncBar('saved','✓ Restored — all caught up');
+    })
+    .catch(function(){ syncBar('error','⚠️ Could not load — starting fresh (data saves locally until connection returns)'); });
+}
+
+/* ── outcome + contact form ── */
+function applyOutcome(idx, status){
+  state.statuses[idx] = status;
+  document.querySelectorAll('[data-stop="'+idx+'"].obtn').forEach(function(b){
+    b.style.background=b.style.color=b.style.borderColor='';
+  });
+  if(status && STYLES[status]){
+    var s=STYLES[status];
+    var active=document.querySelector('[data-stop="'+idx+'"][data-status="'+status+'"]');
+    if(active){active.style.background=s.bg;active.style.color=s.color;active.style.borderColor=s.border;}
+    var card=document.getElementById('stop-'+idx);
+    if(card) card.style.borderColor=s.card;
+  }
+  var cf = document.getElementById('cf-'+idx);
+  if(cf){ if(status==='apptset'){cf.classList.add('open');}else{cf.classList.remove('open');} }
+}
+
+/* ── generate summary ── */
+function generateSummary(){
+  for(var i=0;i<20;i++){
+    var ta=document.getElementById('notes-'+i);
+    if(ta) state.notes[i]=ta.value;
+    state.contacts[i]=readContact(i);
+  }
+  var groups={apptset:[],nih:[],notmovedin:[],ni:[],renter:[],hassolar:[],unlogged:[]};
+  for(var i=0;i<20;i++){ var k=state.statuses[i]||'unlogged'; if(!groups[k]) groups[k]=[]; groups[k].push(i); }
+  var lines=['DOOR KNOCK SUMMARY — April 17, 2026','20 Stops · South of Hwy 93 · 86401',''];
+  if(groups.apptset.length){
+    lines.push('🟢 APPOINTMENTS SET ('+groups.apptset.length+')');
+    groups.apptset.forEach(function(i){
+      var c=state.contacts[i], s=STOPS[i];
+      lines.push('  Stop '+(i+1)+': '+s.addr+' — '+s.owner);
+      if(c.name)      lines.push('    Contact: '+c.name);
+      if(c.phone)     lines.push('    Phone:   '+c.phone);
+      if(c.email)     lines.push('    Email:   '+c.email);
+      if(c.appt_date) lines.push('    Appt:    '+c.appt_date+(c.appt_time?' @ '+c.appt_time:''));
+      if(state.notes[i]) lines.push('    Notes:   '+state.notes[i].trim());
+      lines.push('');
+    });
+  }
+  ['nih','notmovedin','ni','renter','hassolar','unlogged'].forEach(function(key){
+    var labels={nih:'Nobody Home',notmovedin:"Hasn't Moved In",ni:'Not Interested',renter:'Renter',hassolar:'Has Solar',unlogged:'Not Logged'};
+    if(!groups[key]||!groups[key].length) return;
+    lines.push('— '+labels[key].toUpperCase()+' ('+groups[key].length+')');
+    groups[key].forEach(function(i){ lines.push('  Stop '+(i+1)+': '+STOPS[i].addr+(state.notes[i]?' · '+state.notes[i].trim():'')); });
+    lines.push('');
+  });
+  lines.push('---'); lines.push('Paste to Claude to update tracker.');
+  var wrap=document.getElementById('summary-wrap'), txt=document.getElementById('summary-text');
+  wrap.style.display='block'; txt.value=lines.join('\n');
+  setTimeout(function(){ wrap.scrollIntoView({behavior:'smooth',block:'start'}); },80);
+}
+
+function copySummary(){
+  var txt=document.getElementById('summary-text'), btn=document.getElementById('copy-btn');
+  var done=function(){ btn.textContent='✓ Copied! Paste to Claude'; btn.style.background='#1b5e20'; setTimeout(function(){btn.textContent='Copy to Clipboard — Paste to Claude';btn.style.background='';},3000); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt.value).then(done).catch(function(){txt.select();document.execCommand('copy');done();}); }
+  else { txt.select();txt.setSelectionRange(0,99999); try{document.execCommand('copy');done();}catch(e){alert('Tap the text → Select All → Copy');} }
+}
+
+/* ── wire up on load ── */
+window.addEventListener('load', function(){
+
+  /* outcome buttons */
+  document.querySelectorAll('.obtn').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.preventDefault();
+      var idx=parseInt(btn.getAttribute('data-stop'),10);
+      var status=btn.getAttribute('data-status');
+      if(state.statuses[idx]===status){
+        state.statuses[idx]='';
+        btn.style.background=btn.style.color=btn.style.borderColor='';
+        var card=document.getElementById('stop-'+idx); if(card) card.style.borderColor='';
+        var cf=document.getElementById('cf-'+idx); if(cf) cf.classList.remove('open');
+      } else { applyOutcome(idx,status); }
+      scheduleSave();
+    });
+  });
+
+  /* notes input */
+  document.querySelectorAll('.notes-input').forEach(function(ta){
+    var idx=parseInt(ta.id.replace('notes-',''),10);
+    ta.addEventListener('input',function(){ state.notes[idx]=ta.value; scheduleSave(); });
+  });
+
+  /* contact field changes */
+  document.querySelectorAll('.contact-input').forEach(function(inp){
+    inp.addEventListener('change',function(){
+      var m=inp.id.match(/cf-(?:name|phone|email|date|time)-(\d+)/);
+      if(m){ var idx=parseInt(m[1],10); state.contacts[idx]=readContact(idx); scheduleSave(); }
+    });
+  });
+
+  /* Update button per stop */
+  document.querySelectorAll('.notes-input').forEach(function(ta){
+    var idx=parseInt(ta.id.replace('notes-',''),10);
+    var footer=document.createElement('div'); footer.className='notes-footer';
+    var ubtn=document.createElement('button'); ubtn.type='button'; ubtn.className='update-btn'; ubtn.textContent='💾 Update';
+    ubtn.addEventListener('click',function(e){
+      e.preventDefault();
+      state.notes[idx]=ta.value;
+      state.contacts[idx]=readContact(idx);
+      if(_saveTimer) clearTimeout(_saveTimer);
+      pushRoute();
+      if(state.statuses[idx]==='apptset') pushContactsDB(idx);
+      ubtn.classList.add('confirming'); ubtn.textContent='✓ Saved';
+      setTimeout(function(){ ubtn.classList.remove('confirming'); ubtn.textContent='💾 Update'; },2000);
+    });
+    footer.appendChild(ubtn); ta.parentNode.insertBefore(footer,ta.nextSibling);
+  });
+
+  /* summary + copy */
+  var gb=document.getElementById('gen-btn'); if(gb) gb.addEventListener('click',generateSummary);
+  var cb=document.getElementById('copy-btn'); if(cb) cb.addEventListener('click',copySummary);
+
+  /* PAT setup — prompt once if missing */
+  if(!PAT){
+    var modal = document.createElement('div');
+    modal.id='pat-modal';
+    modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML='<div style="background:#1e1e1e;border:1px solid #444;border-radius:12px;padding:28px;max-width:360px;width:90%;color:#fff;font-family:sans-serif;">'
+      +'<div style="font-size:18px;font-weight:700;margin-bottom:10px;">🔑 GitHub Token Setup</div>'
+      +'<div style="font-size:13px;color:#aaa;margin-bottom:16px;">Enter your GitHub Personal Access Token (PAT). It will be stored on this device only — never sent anywhere except GitHub.</div>'
+      +'<input id="pat-input" type="password" placeholder="ghp_..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #555;background:#111;color:#fff;font-size:14px;box-sizing:border-box;margin-bottom:14px;">'
+      +'<button id="pat-save" style="width:100%;padding:11px;background:#2e7d32;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">Save &amp; Continue</button>'
+      +'</div>';
+    document.body.appendChild(modal);
+    document.getElementById('pat-save').addEventListener('click',function(){
+      var val = document.getElementById('pat-input').value.trim();
+      if(!val){alert('Please enter your PAT.');return;}
+      localStorage.setItem('sru_pat',val);
+      PAT = val;
+      HDR['Authorization']='token '+PAT;
+      document.body.removeChild(modal);
+      loadFromGitHub();
+    });
+  } else {
+    loadFromGitHub();
+  }
+});
+</script>
+</body>
+</html>
