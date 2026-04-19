@@ -19,6 +19,26 @@
       "follow_up_30d": "",
       "follow_up_90d": "",
       "source": "doorknocker_route"
+    },
+    {
+      "id": "2026-04-17-stop-4",
+      "captured": "2026-04-19T09:37:43.648Z",
+      "route_date": "2026-04-17",
+      "stop": 4,
+      "address": "2209 Los Angeles St, Kingman AZ 86401",
+      "owner": "GERUE RAY A & PATRICIA D TRUSTEES",
+      "sold_date": "Apr 10",
+      "sold_price": "$260,000",
+      "contact_name": "Donna",
+      "phone": "9283044593",
+      "email": "",
+      "appt_date": "",
+      "appt_time": "",
+      "notes": "Donna. 9283044593. 4:30pm",
+      "status": "appointment_pending",
+      "follow_up_30d": "",
+      "follow_up_90d": "",
+      "source": "doorknocker_route"
     }
   ]
 }
