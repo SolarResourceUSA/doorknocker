@@ -39,6 +39,26 @@
       "follow_up_30d": "",
       "follow_up_90d": "",
       "source": "doorknocker_route"
+    },
+    {
+      "id": "2026-04-17-stop-9",
+      "captured": "2026-04-19T09:37:45.149Z",
+      "route_date": "2026-04-17",
+      "stop": 9,
+      "address": "1810 Airfield Ave, Kingman AZ 86401",
+      "owner": "FREDERICKSON ARNOLD M & ASHLEY E",
+      "sold_date": "Apr 14",
+      "sold_price": "$210,000",
+      "contact_name": "Ryan",
+      "phone": "",
+      "email": "",
+      "appt_date": "",
+      "appt_time": "",
+      "notes": "Ryan. Wife is nurse. Tomorrow 3:30pm",
+      "status": "appointment_pending",
+      "follow_up_30d": "",
+      "follow_up_90d": "",
+      "source": "doorknocker_route"
     }
   ]
 }
