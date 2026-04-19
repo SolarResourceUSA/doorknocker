@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Leads Tracker — Solar Resource USA</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117; color: #f0f0f0;
+    padding: 16px; padding-bottom: 80px;
+    -webkit-text-size-adjust: 100%;
+  }
+  .header {
+    text-align: center; margin-bottom: 20px;
+    padding: 20px 16px 16px;
+    background: linear-gradient(135deg, #1a1f2e, #0d1a0d);
+    border-radius: 16px; border: 1px solid #2a3a2a;
+  }
+  .logo { font-size: 11px; letter-spacing: 2px; color: #4caf50; text-transform: uppercase; margin-bottom: 6px; }
+  .header h1 { font-size: 22px; font-weight: 700; color: #fff; }
+  .header .sub { font-size: 13px; color: #888; margin-top: 4px; }
+
+  #sync-bar {
+    display: flex; align-items: center; justify-content: center;
+    background: #111827; border: 1px solid #1e293b; border-radius: 10px;
+    padding: 8px 14px; margin-bottom: 16px; font-size: 12px; color: #64748b;
+    min-height: 36px; transition: all 0.3s;
+  }
+  #sync-bar.saving { color: #f59e0b; border-color: #78350f; }
+  #sync-bar.saved  { color: #4caf50; border-color: #1b3a1b; }
+  #sync-bar.error  { color: #ef4444; border-color: #7f1d1d; }
+  #sync-bar.loading { color: #60a5fa; border-color: #1e3a5f; }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .fbtn {
+    padding: 7px 14px; border-radius: 20px; border: 1px solid #333;
+    background: #1a1a1a; color: #aaa; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .fbtn.active { background: #1b3a1b; color: #66bb6a; border-color: #2e7d32; }
+  .fbtn:hover:not(.active) { background: #222; color: #ddd; }
+
+  /* Stats row */
+  .stats-row {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px;
+  }
+  .stat-pill {
+    background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px;
+    padding: 8px 14px; font-size: 12px; color: #888; flex: 1; min-width: 80px;
+    text-align: center;
+  }
+  .stat-pill .num { font-size: 22px; font-weight: 700; display: block; margin-bottom: 2px; }
+  .stat-pill.green .num { color: #66bb6a; }
+  .stat-pill.yellow .num { color: #ffd54f; }
+  .stat-pill.blue .num { color: #42a5f5; }
+  .stat-pill.purple .num { color: #ce93d8; }
+  .stat-pill.red .num { color: #ef9a9a; }
+
+  /* Lead card */
+  .lead-card {
+    background: #151920; border: 1px solid #2a2f3a;
+    border-radius: 14px; margin-bottom: 14px;
+    overflow: hidden; transition: border-color 0.2s;
+  }
+  .lead-card.status-closed    { border-color: #2e7d32; }
+  .lead-card.status-no_close_warm  { border-color: #1565c0; }
+  .lead-card.status-no_close_cold  { border-color: #4a1d96; }
+  .lead-card.status-dead      { border-color: #7f1d1d; }
+  .lead-card.status-appointment_pending { border-color: #78350f; }
+  .lead-card.hidden { display: none; }
+
+  .card-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 14px 16px 10px; gap: 10px;
+  }
+  .card-left { flex: 1; min-width: 0; }
+  .contact-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+  .contact-phone a { font-size: 15px; color: #4caf50; text-decoration: none; font-weight: 600; }
+  .contact-phone a:hover { text-decoration: underline; }
+  .contact-phone.no-phone { font-size: 13px; color: #555; font-style: italic; }
+
+  .status-badge {
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .badge-appointment_pending { background: #3a2000; color: #ffa726; border: 1px solid #78350f; }
+  .badge-closed    { background: #1b3a1b; color: #66bb6a; border: 1px solid #2e7d32; }
+  .badge-no_close_warm  { background: #0d2645; color: #42a5f5; border: 1px solid #1565c0; }
+  .badge-no_close_cold  { background: #1e0a3a; color: #ce93d8; border: 1px solid #4a1d96; }
+  .badge-dead      { background: #2a0808; color: #ef9a9a; border: 1px solid #7f1d1d; }
+
+  .card-body { padding: 0 16px 14px; }
+
+  .info-row {
+    font-size: 12px; color: #888; margin-bottom: 4px; display: flex; gap: 6px;
+    align-items: baseline;
+  }
+  .info-row .label { color: #555; font-weight: 600; min-width: 56px; flex-shrink: 0; }
+  .info-row .val { color: #bbb; }
+  .info-row .val.highlight { color: #ffd54f; }
+
+  .notes-box {
+    background: #0d1117; border: 1px solid #1e2530; border-radius: 8px;
+    padding: 8px 10px; margin: 10px 0; font-size: 13px; color: #ccc;
+    line-height: 1.5;
+  }
+  .notes-label { font-size: 10px; color: #555; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 4px; }
+
+  /* Follow-up notes */
+  .followup-area { margin-top: 10px; }
+  .followup-label { font-size: 10px; color: #555; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 5px; }
+  .followup-area textarea {
+    width: 100%; background: #0d1117; border: 1px solid #1e2530; border-radius: 8px;
+    color: #ccc; font-size: 13px; padding: 8px 10px; resize: none; outline: none;
+    font-family: inherit; line-height: 1.5;
+  }
+  .followup-area textarea:focus { border-color: #2e4a6e; }
+  .followup-area textarea::placeholder { color: #3a3a3a; }
+
+  /* Status buttons */
+  .status-btns {
+    display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px;
+  }
+  .sbtn {
+    flex: 1; min-width: calc(50% - 4px);
+    padding: 8px 6px; border-radius: 10px; border: 1px solid #333;
+    background: #1a1a1a; color: #888; font-size: 11px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; text-align: center;
+  }
+  .sbtn:hover { opacity: 0.85; }
+  .sbtn.active-closed    { background: #1b3a1b; color: #66bb6a; border-color: #2e7d32; }
+  .sbtn.active-no_close_warm  { background: #0d2645; color: #42a5f5; border-color: #1565c0; }
+  .sbtn.active-no_close_cold  { background: #1e0a3a; color: #ce93d8; border-color: #4a1d96; }
+  .sbtn.active-dead      { background: #2a0808; color: #ef9a9a; border-color: #7f1d1d; }
+  .sbtn.active-appointment_pending { background: #3a2000; color: #ffa726; border-color: #78350f; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; color: #555; padding: 60px 20px; font-size: 14px;
+  }
+  .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+
+  /* PAT Modal */
+  #pat-modal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); z-index: 999;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  #pat-modal.show { display: flex; }
+  .pat-box {
+    background: #1a1f2e; border: 1px solid #2e7d32; border-radius: 20px;
+    padding: 28px 24px; max-width: 420px; width: 100%;
+  }
+  .pat-box h2 { font-size: 18px; color: #fff; margin-bottom: 8px; }
+  .pat-box p { font-size: 13px; color: #888; margin-bottom: 18px; line-height: 1.6; }
+  .pat-box input {
+    width: 100%; background: #0f1117; border: 1px solid #2e4a6e;
+    color: #fff; font-size: 14px; padding: 12px 14px; border-radius: 10px;
+    outline: none; margin-bottom: 12px; font-family: monospace;
+  }
+  .pat-box input:focus { border-color: #4caf50; }
+  .pat-box button {
+    width: 100%; background: #2e7d32; color: #fff; border: none;
+    padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 700;
+    cursor: pointer;
+  }
+  .pat-box button:hover { background: #388e3c; }
+</style>
+</head>
+<body>
+
+<!-- PAT Modal -->
+<div id="pat-modal">
+  <div class="pat-box">
+    <h2>🔑 GitHub Token Required</h2>
+    <p>Enter your GitHub Personal Access Token to load and save leads. This is stored locally on your device — never sent anywhere except GitHub.</p>
+    <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+    <button onclick="savePAT()">Connect</button>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">Solar Resource USA</div>
+  <h1>Leads Tracker</h1>
+  <div class="sub">All Appointment Contacts · Kingman AZ</div>
+</div>
+
+<div id="sync-bar" class="loading">⟳ Loading leads…</div>
+
+<!-- Stats -->
+<div class="stats-row" id="stats-row">
+  <div class="stat-pill yellow"><span class="num" id="stat-pending">–</span>Pending</div>
+  <div class="stat-pill green"><span class="num" id="stat-closed">–</span>Closed</div>
+  <div class="stat-pill blue"><span class="num" id="stat-warm">–</span>Warm</div>
+  <div class="stat-pill purple"><span class="num" id="stat-cold">–</span>Cold</div>
+  <div class="stat-pill red"><span class="num" id="stat-dead">–</span>Dead</div>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar" id="filter-bar">
+  <button class="fbtn active" onclick="setFilter('all',this)">All</button>
+  <button class="fbtn" onclick="setFilter('appointment_pending',this)">Pending</button>
+  <button class="fbtn" onclick="setFilter('closed',this)">Closed</button>
+  <button class="fbtn" onclick="setFilter('no_close_warm',this)">Warm Follow-Up</button>
+  <button class="fbtn" onclick="setFilter('no_close_cold',this)">Cold Follow-Up</button>
+  <button class="fbtn" onclick="setFilter('dead',this)">Dead</button>
+</div>
+
+<div id="leads-container"></div>
+
+<script>
+var PAT  = localStorage.getItem('sru_pat') || '';
+var REPO = 'SolarResourceUSA/doorknocker';
+var BASE = 'https://api.github.com/repos/'+REPO+'/contents/';
+function hdr(){ return {'Authorization':'token '+PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'}; }
+
+var db = { contacts: [] };
+var dbSha = null;
+var saveTimer = null;
+var currentFilter = 'all';
+
+var STATUS_LABELS = {
+  appointment_pending: '📅 Appt Pending',
+  closed:             '✅ Closed',
+  no_close_warm:      '🔵 Warm (30d)',
+  no_close_cold:      '🟣 Cold (90d)',
+  dead:               '💀 Dead'
+};
+
+function syncBar(cls, msg){ var b=document.getElementById('sync-bar'); b.className=cls; b.textContent=msg; }
+
+function savePAT(){
+  var v = document.getElementById('pat-input').value.trim();
+  if(!v){ alert('Please enter your token.'); return; }
+  PAT = v;
+  localStorage.setItem('sru_pat', v);
+  document.getElementById('pat-modal').classList.remove('show');
+  loadLeads();
+}
+
+function loadLeads(){
+  if(!PAT){ document.getElementById('pat-modal').classList.add('show'); return; }
+  syncBar('loading','⟳ Loading leads…');
+  fetch(BASE+'contacts-db.json',{headers:hdr()})
+    .then(function(r){
+      if(r.status===401){ PAT=''; localStorage.removeItem('sru_pat'); document.getElementById('pat-modal').classList.add('show'); throw new Error('auth'); }
+      if(r.status===404){ syncBar('saved','No leads yet — go knock some doors!'); renderLeads(); return null; }
+      return r.json();
+    })
+    .then(function(d){
+      if(!d) return;
+      dbSha = d.sha;
+      db = JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))));
+      // Sort: pending first, then by captured date desc
+      db.contacts.sort(function(a,b){
+        var order = {appointment_pending:0, no_close_warm:1, no_close_cold:2, closed:3, dead:4};
+        var oa = order[a.status]!=null ? order[a.status] : 5;
+        var ob = order[b.status]!=null ? order[b.status] : 5;
+        if(oa!==ob) return oa-ob;
+        return new Date(b.captured) - new Date(a.captured);
+      });
+      updateStats();
+      renderLeads();
+      var t=new Date(),h=t.getHours(),m=t.getMinutes(),ap=h>=12?'PM':'AM';
+      h=h%12||12;
+      syncBar('saved','✓ Loaded '+db.contacts.length+' lead'+(db.contacts.length!==1?'s':'')+' · '+h+':'+(m<10?'0'+m:m)+' '+ap);
+    })
+    .catch(function(e){ if(e.message!=='auth') syncBar('error','⚠️ Could not load leads'); });
+}
+
+function updateStats(){
+  var counts = {appointment_pending:0,closed:0,no_close_warm:0,no_close_cold:0,dead:0};
+  db.contacts.forEach(function(c){ if(counts[c.status]!=null) counts[c.status]++; });
+  document.getElementById('stat-pending').textContent = counts.appointment_pending;
+  document.getElementById('stat-closed').textContent  = counts.closed;
+  document.getElementById('stat-warm').textContent    = counts.no_close_warm;
+  document.getElementById('stat-cold').textContent    = counts.no_close_cold;
+  document.getElementById('stat-dead').textContent    = counts.dead;
+}
+
+function formatPhone(p){
+  if(!p) return '';
+  var d = p.replace(/\D/g,'');
+  if(d.length===10) return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);
+  return p;
+}
+
+function renderLeads(){
+  var container = document.getElementById('leads-container');
+  if(!db.contacts.length){
+    container.innerHTML = '<div class="empty-state"><div class="big">📋</div>No leads yet.</div>';
+    return;
+  }
+  var html = '';
+  db.contacts.forEach(function(c, i){
+    var hidden = (currentFilter !== 'all' && c.status !== currentFilter) ? 'hidden' : '';
+    var statusLabel = STATUS_LABELS[c.status] || c.status;
+    var badgeCls = 'badge-'+(c.status||'appointment_pending');
+    var cardCls  = 'status-'+(c.status||'appointment_pending');
+    var phone = formatPhone(c.phone);
+    var routeLabel = c.route_date ? 'Apr ' + parseInt(c.route_date.split('-')[2]) + ' Route · Stop ' + c.stop : 'Stop '+c.stop;
+    var capturedDate = c.captured ? new Date(c.captured).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+    var apptStr = '';
+    if(c.appt_date || c.appt_time) apptStr = (c.appt_date||'') + (c.appt_date&&c.appt_time?' · ':' ') + (c.appt_time||'');
+
+    html += '<div class="lead-card '+cardCls+' '+hidden+'" id="card-'+i+'">';
+    html += '<div class="card-top">';
+    html += '<div class="card-left">';
+    html += '<div class="contact-name">'+(c.contact_name||'Unknown')+'</div>';
+    if(phone){
+      html += '<div class="contact-phone"><a href="tel:'+c.phone+'">📞 '+phone+'</a></div>';
+    } else {
+      html += '<div class="contact-phone no-phone">No phone on file</div>';
+    }
+    html += '</div>';
+    html += '<span class="status-badge '+badgeCls+'">'+statusLabel+'</span>';
+    html += '</div>';
+
+    html += '<div class="card-body">';
+    html += '<div class="info-row"><span class="label">Address</span><span class="val">'+c.address+'</span></div>';
+    if(c.owner) html += '<div class="info-row"><span class="label">Owner</span><span class="val">'+c.owner+'</span></div>';
+    html += '<div class="info-row"><span class="label">Sold</span><span class="val highlight">'+c.sold_price+' · '+c.sold_date+'</span></div>';
+    if(apptStr) html += '<div class="info-row"><span class="label">Appt</span><span class="val highlight">'+apptStr+'</span></div>';
+    if(c.email) html += '<div class="info-row"><span class="label">Email</span><span class="val">'+c.email+'</span></div>';
+    html += '<div class="info-row"><span class="label">Source</span><span class="val">'+routeLabel+(capturedDate?' · Captured '+capturedDate:'')+'</span></div>';
+
+    if(c.notes){
+      html += '<div class="notes-box"><div class="notes-label">Field Notes</div>'+escHtml(c.notes)+'</div>';
+    }
+
+    // Follow-up notes
+    html += '<div class="followup-area">';
+    html += '<div class="followup-label">Follow-Up Notes</div>';
+    html += '<textarea id="fu-'+i+'" rows="2" placeholder="Add follow-up notes here…" onchange="saveFollowUp('+i+')" onblur="saveFollowUp('+i+')">'+(c.follow_up_notes||'')+'</textarea>';
+    html += '</div>';
+
+    // Status buttons
+    html += '<div class="status-btns">';
+    var statuses = [
+      ['closed','✅ Closed'],
+      ['no_close_warm','🔵 No Close · Warm'],
+      ['no_close_cold','🟣 No Close · Cold'],
+      ['appointment_pending','📅 Pending'],
+      ['dead','💀 Dead']
+    ];
+    statuses.forEach(function(s){
+      var activeCls = c.status===s[0] ? 'active-'+s[0] : '';
+      html += '<button class="sbtn '+activeCls+'" onclick="setStatus('+i+',\''+s[0]+'\')">'+s[1]+'</button>';
+    });
+    html += '</div>';
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function escHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.fbtn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.querySelectorAll('.lead-card').forEach(function(card, i){
+    var c = db.contacts[i];
+    if(f==='all' || c.status===f) card.classList.remove('hidden');
+    else card.classList.add('hidden');
+  });
+}
+
+function saveFollowUp(i){
+  var ta = document.getElementById('fu-'+i);
+  if(ta) db.contacts[i].follow_up_notes = ta.value;
+  scheduleSave();
+}
+
+function setStatus(i, status){
+  db.contacts[i].status = status;
+  updateStats();
+  renderLeads();
+  scheduleSave();
+}
+
+function scheduleSave(){
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushLeads, 1200);
+}
+
+function pushLeads(){
+  syncBar('saving','⟳ Saving…');
+  var payload = btoa(unescape(encodeURIComponent(JSON.stringify(db,null,2))));
+  var body = {message:'Leads update '+new Date().toISOString(), content:payload};
+  if(dbSha) body.sha = dbSha;
+  fetch(BASE+'contacts-db.json',{method:'PUT',headers:hdr(),body:JSON.stringify(body)})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d&&d.content) dbSha=d.content.sha;
+      var t=new Date(),h=t.getHours(),m=t.getMinutes(),ap=h>=12?'PM':'AM';
+      h=h%12||12;
+      syncBar('saved','✓ Saved '+h+':'+(m<10?'0'+m:m)+' '+ap);
+    })
+    .catch(function(){ syncBar('error','⚠️ Save failed'); });
+}
+
+// Init
+loadLeads();
+</script>
+</body>
+</html>
