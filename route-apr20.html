@@ -83,7 +83,7 @@
   <div class="logo">☀️ Solar Resource USA</div>
   <h1>Door Knocker Route</h1>
   <div class="sub">April 20, 2026 &nbsp;·&nbsp; High-Value Homes · Kingman AZ</div>
-  <div class="zone">💰 $400k–$770k · 25 Stops · Sold in last 12 months · Nearest-Neighbor Routed</div>
+  <div class="zone">💰 $400k–$770k · 29 Stops · 4 Appointments + 25 Door Knocks</div>
 </div>
 
 <div id="sync-bar">⟳ Loading saved data…</div>
@@ -91,7 +91,7 @@
 <div class="route-btns">
   <a class="route-btn" href="https://www.google.com/maps/dir/6723+E+Knob+Hill+Dr,+Kingman,+AZ+86401/4696+S+Hansen+Rd,+Kingman,+AZ+86401/2905+S+Surrey+Loop,+Kingman,+AZ+86401/2124+Blackfoot+Dr,+Kingman,+AZ+86401/2276+Seminole+Dr,+Kingman,+AZ+86401/3864+Zuni+Ave,+Kingman,+AZ+86401/3957+Sioux+Ave,+Kingman,+AZ+86401/349+Hidden+Canyon+Rd,+Kingman,+AZ+86401/850+Rawhide+Dr,+Kingman,+AZ+86401">🗺️ Stops 1–9</a>
   <a class="route-btn b" href="https://www.google.com/maps/dir/850+Rawhide+Dr,+Kingman,+AZ+86401/4319+Gemstone+Ave,+Kingman,+AZ+86401/4351+Pinto+Rd,+Kingman,+AZ+86401/4198+Glencliff+Ave,+Kingman,+AZ+86401/2898+Rawhide+Dr,+Kingman,+AZ+86401/2921+Rawhide+Dr,+Kingman,+AZ+86401/3649+Wheatland+Ave,+Kingman,+AZ+86401/3105+Southern+Ave,+Kingman,+AZ+86401/2325+Wildflower+St,+Kingman,+AZ+86401">🗺️ Stops 10–17</a>
-  <a class="route-btn c" href="https://www.google.com/maps/dir/2199+Seneca+St,+Kingman,+AZ+86401/3573+Cheyenne+Ave,+Kingman,+AZ+86401/3263+Summit+Dr,+Kingman,+AZ+86401/3211+Summit+Dr,+Kingman,+AZ+86401/2219+Rincon+Ave,+Kingman,+AZ+86401/825+Country+Club+Dr,+Kingman,+AZ+86401/3665+N+Harvard+St,+Kingman,+AZ+86409/630+Riata+Valley+Rd,+Kingman,+AZ+86409">🗺️ Stops 18–25</a>
+  <a class="route-btn c" href="https://www.google.com/maps/dir/2199+Seneca+St,+Kingman,+AZ+86401/3573+Cheyenne+Ave,+Kingman,+AZ+86401/3263+Summit+Dr,+Kingman,+AZ+86401/3211+Summit+Dr,+Kingman,+AZ+86401/2219+Rincon+Ave,+Kingman,+AZ+86401/825+Country+Club+Dr,+Kingman,+AZ+86409/3665+N+Harvard+St,+Kingman,+AZ+86409/630+Riata+Valley+Rd,+Kingman,+AZ+86409">🗺️ Stops 18–25</a>
 </div>
 
 <div id="stops-container"></div>
@@ -117,10 +117,14 @@ var HDR  = {'Authorization':'token '+PAT,'Accept':'application/vnd.github.v3+jso
 var BASE = 'https://api.github.com/repos/'+REPO+'/contents/';
 
 var STOPS = [
-  {addr:'6723 E Knob Hill Dr',  zip:'86401', price:'$769,900', sqft:'2,842', beds:'4', baths:'5', sold:'Mar 27',  dist:'Start'},
-  {addr:'4696 S Hansen Rd',      zip:'86401', price:'$605,000', sqft:'1,936', beds:'3', baths:'2', sold:'Mar 30',  dist:'0.4 mi'},
+  {addr:'905 Country Club Dr',  zip:'86401', price:'$500,000', sqft:'—',     beds:'—', baths:'—', sold:'Apr 13', dist:'📅 Appt 12pm'},
+  {addr:'2131 Ashfork Ave',     zip:'86401', price:'$250,000', sqft:'—',     beds:'—', baths:'—', sold:'Apr 7',  dist:'📅 Appt 2:30pm'},
+  {addr:'1810 Airfield Ave',    zip:'86401', price:'$210,000', sqft:'—',     beds:'—', baths:'—', sold:'Apr 14', dist:'📅 Appt 3:30pm'},
+  {addr:'2209 Los Angeles St',  zip:'86401', price:'$260,000', sqft:'—',     beds:'—', baths:'—', sold:'Apr 10', dist:'📅 Appt 4:30pm'},
+  {addr:'6723 E Knob Hill Dr',  zip:'86401', price:'$769,000', sqft:'2,842', beds:'4', baths:'5', sold:'Mar 27',  dist:'Start'},
+  {addr:'4696 S Hansen Rd',     zip:'86401', price:'$605,000', sqft:'1,936', beds:'3', baths:'2', sold:'Mar 30',  dist:'0.4 mi'},
   {addr:'2905 S Surrey Loop',   zip:'86401', price:'$577,000', sqft:'2,643', beds:'3', baths:'3', sold:'Mar 4',   dist:'6.2 mi'},
-  {addr:'2124 Blackfoot Dr',    zjep:'86401', price:'$665,000', sqft:'2,551', beds:'4', baths:'3', sold:'Apr 17',  dist:'3.2 mi'},
+  {addr:'2124 Blackfoot Dr',    zip:'86401', price:'$665,000', sqft:'2,551', beds:'4', baths:'3', sold:'Apr 17',  dist:'3.2 mi'},
   {addr:'2276 Seminole Dr',     zip:'86401', price:'$549,000', sqft:'2,766', beds:'4', baths:'3', sold:'Feb 18',  dist:'0.4 mi'},
   {addr:'3864 Zuni Ave',        zip:'86401', price:'$580,000', sqft:'2,431', beds:'4', baths:'3', sold:'Recent',  dist:'0.2 mi'},
   {addr:'3957 Sioux Ave',       zip:'86401', price:'$570,000', sqft:'2,329', beds:'4', baths:'2', sold:'Mar 26',  dist:'0.3 mi'},
@@ -128,11 +132,11 @@ var STOPS = [
   {addr:'850 Rawhide Dr',       zip:'86401', price:'$453,000', sqft:'2,141', beds:'4', baths:'2', sold:'Feb 23',  dist:'0.2 mi'},
   {addr:'4319 Gemstone Ave',    zip:'86401', price:'$445,000', sqft:'2,047', beds:'4', baths:'2', sold:'Mar 27',  dist:'0.3 mi'},
   {addr:'4351 Pinto Rd',        zip:'86401', price:'$527,000', sqft:'2,373', beds:'4', baths:'3', sold:'Apr 1',   dist:'0.5 mi'},
-  {addr:'4198 Glencliff Ave',   zjep:'86401', price:'$450,000', sqft:'2,245', beds:'4', baths:'3', sold:'Mar 23',  dist:'0.3 mi'},
+  {addr:'4198 Glencliff Ave',   zip:'86401', price:'$450,000', sqft:'2,245', beds:'4', baths:'3', sold:'Mar 23',  dist:'0.3 mi'},
   {addr:'2898 Rawhide Dr',      zip:'86401', price:'$452,000', sqft:'1,943', beds:'3', baths:'2', sold:'Feb 23',  dist:'0.3 mi'},
-  {addr:'2921 Rawhide Dr',      zjep:'86401', price:'$468,000', sqft:'1,892', beds:'3', baths:'2', sold:'Mar 19',  dist:'0.1 mi'},
+  {addr:'2921 Rawhide Dr',      zip:'86401', price:'$468,000', sqft:'1,892', beds:'3', baths:'2', sold:'Mar 19',  dist:'0.1 mi'},
   {addr:'3649 Wheatland Ave',   zip:'86401', price:'$430,400', sqft:'1,909', beds:'4', baths:'2', sold:'Apr 9',   dist:'1.3 mi'},
-  {addr:'3105 Southern Ave',    zjep:'86401', price:'$480,000', sqft:'2,290', beds:'4', baths:'2', sold:'Feb 25',  dist: 2.0 mi'},
+  {addr:'3105 Southern Ave',    zip:'86401', price:'$480,000', sqft:'2,290', beds:'4', baths:'2', sold:'Feb 25',  dist: 2.0 mi'},
   {addr:'2325 Wildflower St',   zip:'86401', price:'$435,000', sqft:'1,752', beds:'4', baths:'2', sold:'Mar 25',  dist:'0.4 mi'},
   {addr:'2199 Seneca St',       zip:'86401', price:'$514,900', sqft:'2,377', beds:'4', baths:'3', sold:'Mar 27',  dist:'0.7 mi'},
   {addr:'3573 Cheyenne Ave',    zip:'86401', price:'$545,000', sqft:'3,076', beds:'5', baths:'4', sold:'Feb 17',  dist:'0.7 mi'},
@@ -144,12 +148,25 @@ var STOPS = [
   {addr:'630 Riata Valley Rd',  zip:'86409', price:'$433,000', sqft:'2,208', beds:'4', baths:'2', sold:'Mar 6',   dist:'0.6 mi'}
 ];
 
-var EMPTY_CONTACT = function(){ return {name:'',zone:'',email:'',appt_date:'',appt_time:''}; };
+var EMPTY_CONTACT = function(){ return {name:'',phone:'',email:'',appt_date:'',appt_time:''}; };
 var state = {
-  statuses: Array(25).fill(''),
-  notes:    Array(25).fill(''),
-  contacts: Array.from({length:25}, EMPTY_CONTACT)
+  statuses: Array(29).fill(''),
+  notes:    Array(29).fill(''),
+  contacts: Array.from({length:29}, EMPTY_CONTACT)
 };
+// Pre-seed the 4 appointments at the top of the list
+state.statuses[0] = 'apptset';
+state.statuses[1] = 'apptset';
+state.statuses[2] = 'apptset';
+state.statuses[3] = 'apptset';
+state.notes[0] = 'Michael & Kiana 12pm (spoke to daughter)';
+state.notes[1] = 'Donald. 2:30pm. Just moved in.';
+state.notes[2] = 'Ryan. Wife is nurse. 3:30pm';
+state.notes[3] = 'Donna. 9283044593. 4:30pm';
+state.contacts[0] = {name:'Michael & Kiana', phone:'',           email:'', appt_date:'2026-04-20', appt_time:'12:00'};
+state.contacts[1] = {name:'Donald',          phone:'',           email:'', appt_date:'2026-04-20', appt_time:'14:30'};
+state.contacts[2] = {name:'Ryan',            phone:'',           email:'', appt_date:'2026-04-20', appt_time:'15:30'};
+state.contacts[3] = {name:'Donna',           phone:'9283044593', email:'', appt_date:'2026-04-20', appt_time:'16:30'};
 
 var STYLES = {
   nih:        {bg:'#2a2a2a',color:'#ccc',  border:'#555',   card:'#555'},
@@ -187,7 +204,7 @@ function buildStops(){
     html += '<div class="owner-row"><div class="owner-icon">⚠️</div><div class="owner-info"><div class="owner-label">Owner on Record</div><div class="owner-name" style="color:#888;">Verify owner at door · check assessor.mohave.county.gov</div></div><span class="owner-tag tag-unknown">ZILLOW</span></div>';
     html += '<div class="outcome-label">Outcome</div>';
     html += '<div class="outcome-btns" id="btns-'+i+'">';
-    html += '<button type="button" class="obtn" data-stop="'+i+'" data-status="nih">🚺 Nobody Home</button>';
+    html += '<button type="button" class="obtn" data-stop="'+i+'" data-status="nih">🚪 Nobody Home</button>';
     html += '<button type="button" class="obtn" data-stop="'+i+'" data-status="apptset">📅 Appt Set</button>';
     html += '<button type="button" class="obtn" data-stop="'+i+'" data-status="notmovedin">🏠 Hasn\'t Moved In</button>';
     html += '<button type="button" class="obtn" data-stop="'+i+'" data-status="ni">👎 Not Interested</button>';
@@ -208,7 +225,7 @@ function buildStops(){
 }
 
 /* ── sync bar ── */
-function syncBar(color, msg){ var b=document.getElementById('sync-bar'); b.className=color; b.textContent=msg; }
+function syncBar(cls, msg){ var b=document.getElementById('sync-bar'); b.className=cls; b.textContent=msg; }
 
 /* ── github helpers ── */
 var _routeSha = null, _saveTimer = null;
@@ -232,7 +249,7 @@ function fillContact(idx, c){
   });
 }
 
-functio,eSave(){ if(_saveTimer) clearTimeout(_saveTimer); _saveTimer = setTimeout(pushRoute, 1500); }
+function scheduleSave(){ if(_saveTimer) clearTimeout(_saveTimer); _saveTimer = setTimeout(pushRoute, 1500); }
 
 function pushRoute(){
   syncBar('saving','⟳ Saving…');
@@ -322,14 +339,14 @@ function applyOutcome(idx, status){
 }
 
 function generateSummary(){
-  for(var i=0;i<25;i++){
+  for(var i=0;i<29;i++){
     var ta=document.getElementById('notes-'+i);
     if(ta) state.notes[i]=ta.value;
     state.contacts[i]=readContact(i);
   }
   var groups={apptset:[],nih:[],notmovedin:[],ni:[],renter:[],hassolar:[],unlogged:[]};
-  for(var i=0;i<25;i++){ var k=state.statuses[i]||'unlogged'; if(!groups[k]) groups[k]=[]; groups[k].push(i); }
-  var lines=['DOOR KNOCK SUMMARY — April 20, 2026','25 Stops · High-Value $400k+ · All Kingman 86401/86409',''];
+  for(var i=0;i<29;i++){ var k=state.statuses[i]||'unlogged'; if(!groups[k]) groups[k]=[]; groups[k].push(i); }
+  var lines=['DOOR KNOCK SUMMARY — April 20, 2026','29 Stops · 4 Appointments + 25 Door Knocks · Kingman 86401/86409',''];
   if(groups.apptset.length){
     lines.push('🟢 APPOINTMENTS SET ('+groups.apptset.length+')');
     groups.apptset.forEach(function(i){
