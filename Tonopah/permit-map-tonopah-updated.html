@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Tonopah Permit Map – UPDATED – Solar Resource USA</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body { margin:0; padding:0; height:100%; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:#0b0f14; color:#e6ecf2; overflow:hidden; }
+  #top {
+    position:fixed; top:0; left:0; right:0; z-index:400;
+    background:linear-gradient(180deg,#0f1722,#0b0f14); border-bottom:1px solid #22303f;
+    padding:10px 12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 10px rgba(0,0,0,.45);
+  }
+  #top h1 { font-size:14px; margin:0; letter-spacing:.2px; color:#e6ecf2; font-weight:700; }
+  #top .sub { font-size:11px; color:#8a99ac; }
+  #legend { display:flex; gap:10px; font-size:11px; align-items:center; flex-wrap:wrap; }
+  .pill { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:12px; background:#14202b; border:1px solid #22303f; cursor:pointer; user-select:none; }
+  .pill.off { opacity:.35; }
+  .dot { width:10px; height:10px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.12) inset; }
+  .dot.green { background:#22c55e; }
+  .dot.yellow { background:#eab308; }
+  .dot.red { background:#ef4444; }
+  #map { position:absolute; top:82px; bottom:0; left:0; right:0; background:#0b0f14; }
+  .leaflet-popup-content-wrapper { background:#111a24; color:#e6ecf2; border-radius:10px; }
+  .leaflet-popup-content { margin:10px 12px; font-size:13px; line-height:1.4; max-width:260px; }
+  .leaflet-popup-tip { background:#111a24; }
+  .pop-h { font-weight:700; margin-bottom:4px; font-size:14px; }
+  .pop-kv { margin:2px 0; font-size:12px; color:#c8d2de; }
+  .pop-kv b { color:#8a99ac; font-weight:500; margin-right:4px; }
+  .pop-kw { color:#ffb020; font-weight:700; }
+  .pop-nav { display:block; margin-top:8px; background:#2563eb; color:white; text-align:center; padding:8px; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; }
+  .pop-nav:hover { background:#1d4ed8; }
+  .badge { display:inline-block; font-size:10px; padding:2px 6px; border-radius:4px; margin-right:4px; font-weight:600; text-transform:uppercase; letter-spacing:.3px; }
+  .b-green { background:#14532d; color:#86efac; }
+  .b-yellow { background:#713f12; color:#fde68a; }
+  .b-red { background:#7f1d1d; color:#fca5a5; }
+  .b-approx { background:#1e293b; color:#94a3b8; }
+  #count { font-size:11px; color:#8a99ac; }
+  .marker-pin {
+    width:22px; height:22px; border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg); border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.5);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .marker-pin.green { background:#22c55e; }
+  .marker-pin.yellow { background:#eab308; }
+  .marker-pin.red { background:#ef4444; }
+  .marker-pin .num { transform:rotate(45deg); color:#fff; font-weight:700; font-size:10px; }
+</style>
+</head>
+<body>
+<div id="top">
+  <div>
+    <h1>Tonopah / West Valley Permit Map <span style="font-size:10px;color:#8a99ac;font-weight:400;">UPDATED</span></h1>
+    <div class="sub">Maricopa County · 8-month window · 7 fresh · 2 pending · 19 hot leads</div>
+  </div>
+  <div id="legend">
+    <span class="pill" data-bkt="green"><span class="dot green"></span>Issued &lt;2.5mo</span>
+    <span class="pill" data-bkt="yellow"><span class="dot yellow"></span>Pending / In Review</span>
+    <span class="pill" data-bkt="red"><span class="dot red"></span>HOT LEAD (aged / withdrawn)</span>
+    <span id="count"></span>
+  </div>
+</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+const PERMITS = [
+  {p:'BLDR2600280',addr:'36915 W MONROE ST',city:'TONOPAH',zip:'85354',parcel:'506-41-113J',st:'Withdrawn',apply:'2026-01-14',issue:'',expire:'',kw:5.67,lat:33.434793,lon:-112.864542,cs:'geocoded',age:98,bkt:'red',desc:'Install 5.67kW PV Solar (roof mounted)',permitId:'c72916f8-9ee3-433a-911e-a4a7dffb75f0'},
+  {p:'BLDR2600453',addr:'20369 W CARVER RD',city:'BUCKEYE',zip:'85326',parcel:'400-53-275',st:'Issued',apply:'2026-01-21',issue:'2026-01-26',expire:'2026-07-25',kw:null,lat:33.341176,lon:-112.495808,cs:'geocoded',age:91,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // SOLAREDHE HOME BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'afa29aad-f8ff-4b87-a717-732de8206e2e'},
+  {p:'BLDR2509583',addr:'3212 N 367TH AVE',city:'TONOPAH',zip:'85354',parcel:'506-40-175J',st:'Withdrawn',apply:'2025-12-02',issue:'',expire:'',kw:8.8,lat:33.456724,lon:-112.841779,cs:'geocoded',age:141,bkt:'red',desc:'Installation of a 8.800 kW rooftop mounted photovoltaic system with battery storage system.',permitId:'dec05adb-a352-4102-b4c0-23e0e75beccc'},
+  {p:'BLDR2600600',addr:'12319 S 204TH LN',city:'BUCKEYE',zip:'85326',parcel:'400-53-269',st:'Issued',apply:'2026-01-27',issue:'2026-01-30',expire:'2026-08-31',kw:null,lat:33.336793,lon:-112.490918,cs:'geocoded',age:85,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // TESLA POWERWALL 3 BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'d027674f-b71f-4353-be8d-efe1bf3966e5'},
+  {p:'BLDR2509950',addr:'113 E MARICOPA RD',city:'BUCKEYE',zip:'85326',parcel:'504-53-100A',st:'Withdrawn',apply:'2025-12-16',issue:'2025-12-19',expire:'2026-06-17',kw:null,lat:33.384559,lon:-112.582386,cs:'geocoded',age:127,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM POWERWALL 3 BATTERY WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'9d0ee3d4-c716-409f-9843-a87bea607145'},
+  {p:'BLDR2600845',addr:'22211 W WILDFLOWER DR',city:'WITTMANN',zip:'85361',parcel:'503-39-081',st:'In Review',apply:'2026-02-03',issue:'',expire:'',kw:null,lat:33.671111,lon:-112.408933,cs:'geocoded',age:78,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM// INTEGRATED TESLA BATTERY // ON EXISTING MANUFACTURED HOME // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'6841a8dc-91fe-4f5d-b2a1-21662e35544d'},
+  {p:'BLDR2600631',addr:'22341 W DOVE VALLEY RD',city:'WITTMANN',zip:'85361',parcel:'503-39-004N',st:'Issued',apply:'2026-01-27',issue:'2026-02-12',expire:'2026-08-11',kw:null,lat:33.782087,lon:-112.543919,cs:'geocoded',age:85,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'aa5b34ab-8234-4998-887e-1a7e45298ea2'},
+  {p:'BLDR2509106',addr:'22341 W DOVE VALLEY RD',city:'WITTMANN',zip:'85361',parcel:'503-39-004N',st:'Withdrawn',apply:'2025-11-13',issue:'2025-11-24',expire:'2026-05-23',kw:null,lat:33.782087,lon:-112.543919,cs:'geocoded',age:160,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'eb1d97de-a429-4a51-baee-00273e5de52c'},
+  {p:'BLDR2509990',addr:'34811 W BUCKEYE RD',city:'TONOPAH',zip:'85354',parcel:'504-12-082F',st:'Issued',apply:'2025-12-16',issue:'2025-12-22',expire:'2026-07-13',kw:null,lat:33.435517,lon:-112.801272,cs:'geocoded',age:127,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'e548f0aa-238b-415d-b5dc-d43e78b48510'},
+  {p:'BLDR2507438',addr:'35536 W HAMMOND DR',city:'TONOPAH',zip:'85354',parcel:'506-41-171X',st:'Expired',apply:'2025-09-17',issue:'2025-09-19',expire:'2026-03-18',kw:null,lat:33.48988,lon:-112.92804,cs:'zip-approx',age:217,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'0fbff63a-9aab-415f-a93a-b32b80f7bdca'},
+  {p:'BLDR2601941',addr:'6215 S EL MIRAGE RD',city:'TOLLESON',zip:'85353',parcel:'500-69-032',st:'Issued',apply:'2026-03-11',issue:'2026-03-12',expire:'2026-09-08',kw:null,lat:33.40008,lon:-112.26996,cs:'zip-approx',age:42,bkt:'green',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // TESLA POWERWALL 3 BATTERY // WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'edcd1f1d-9e69-46a7-b96b-e216744071bb'},
+  {p:'BLDR2506917',addr:'1024 N 193RD AVE',city:'BUCKEYE',zip:'85326',parcel:'502-36-011C',st:'Withdrawn',apply:'2025-08-28',issue:'2025-09-03',expire:'2026-03-02',kw:null,lat:33.3304,lon:-112.6256,cs:'zip-approx',age:237,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WHICH INCLUDES REDUCTION OF MAIN CIRCUIT BREAKER TO 175 AMPS // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'739a7c08-6fca-4496-9b43-18b14c3dd7be'},
+  {p:'BLDR2506807',addr:'22347 W PATTON RD',city:'WITTMANN',zip:'85361',parcel:'503-34-018F',st:'In Review',apply:'2025-08-25',issue:'',expire:'',kw:null,lat:33.68852,lon:-112.5334,cs:'zip-approx',age:240,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'f628309b-f565-480d-972d-f1142b7dcab3'},
+  {p:'BLDR2602638',addr:'36923 W MONROE ST',city:'TONOPAH',zip:'85354',parcel:'506-41-113H',st:'Requires Customer Attention',apply:'2026-04-03',issue:'',expire:'',kw:7.02,lat:33.41556,lon:-112.92564,cs:'zip-approx',age:19,bkt:'yellow',desc:'7.020 kW DC ROOF MOUNTED SOLAR',permitId:'621d6fb4-9ef4-4cef-baef-0de36d879ce6'},
+  {p:'BLDR2602524',addr:'33125 W EUCLID AVE',city:'TONOPAH',zip:'85354',parcel:'401-42-537',st:'Issued',apply:'2026-03-31',issue:'2026-04-09',expire:'2026-10-06',kw:null,lat:33.5134,lon:-112.9386,cs:'zip-approx',age:22,bkt:'green',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'d68d0d72-1cd3-4468-b374-098980008309'},
+  {p:'BLDR2600318',addr:'22503 W PATTON RD',city:'WITTMANN',zip:'85361',parcel:'503-34-016T',st:'Issued',apply:'2026-01-15',issue:'2026-03-16',expire:'2026-09-12',kw:null,lat:33.77468,lon:-112.56908,cs:'zip-approx',age:97,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'dae8f6e0-a6f5-43ab-acdf-a08bf4aa194d'},
+  {p:'BLDR2602370',addr:'37217 W POLK ST',city:'TONOPAH',zip:'85354',parcel:'506-40-004G',st:'Issued',apply:'2026-03-25',issue:'2026-04-06',expire:'2026-10-03',kw:null,lat:33.52756,lon:-112.951,cs:'zip-approx',age:28,bkt:'green',desc:'INSTALLATION OF PV BATTERY STORAGE TESLA POWERWALL 3 WITH 11.5 kWh PV STORAGE CAPACITY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'1f570d38-21fc-4879-b524-5edeadc58156'},
+  {p:'BLDR2600061',addr:'25505 W BROOKHART WAY',city:'WITTMANN',zip:'85361',parcel:'503-32-496A',st:'Issued',apply:'2026-01-06',issue:'2026-01-21',expire:'2026-07-20',kw:null,lat:33.75052,lon:-112.50108,cs:'zip-approx',age:106,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'d5e059a5-04c9-448f-abe3-e97bf78cb7ed'},
+  {p:'BLDR2601382',addr:'20334 W RAINBOW BLVD',city:'BUCKEYE',zip:'85326',parcel:'400-62-301',st:'Withdrawn',apply:'2026-02-20',issue:'',expire:'',kw:null,lat:33.35384,lon:-112.61848,cs:'zip-approx',age:61,bkt:'red',desc:'installing a ground mount solar system with one battery',permitId:'832a3d72-f9a1-4c34-b6bb-713b7d1baf81'},
+  {p:'BLDR2601231',addr:'805 S 348TH AVE',city:'TONOPAH',zip:'85354',parcel:'504-12-005T',st:'Issued',apply:'2026-02-16',issue:'2026-02-20',expire:'2026-09-12',kw:null,lat:33.4526,lon:-112.93268,cs:'zip-approx',age:65,bkt:'green',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // (2) TESLA POWERWALL 3 BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'ac7269ff-6e1d-4b74-b168-0a659efa0120'},
+  {p:'BLDR2509075',addr:'11305 S 195TH DR',city:'BUCKEYE',zip:'85326',parcel:'400-83-019',st:'Withdrawn',apply:'2025-11-13',issue:'2025-11-24',expire:'2026-05-23',kw:null,lat:33.39536,lon:-112.63536,cs:'zip-approx',age:160,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'ad54a796-bc79-4edb-91b5-ef07fc68eeb3'},
+  {p:'BLDR2508599',addr:'12856 S ZUNI RD',city:'BUCKEYE',zip:'85326',parcel:'400-76-043',st:'Withdrawn',apply:'2025-10-29',issue:'2025-10-31',expire:'2026-04-29',kw:null,lat:33.368,lon:-112.63624,cs:'zip-approx',age:175,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'0fcbd612-c121-42fe-941d-5fcdc54175ae'},
+  {p:'BLDR2602821',addr:'9413 S 543RD AVE',city:'TONOPAH',zip:'85354',parcel:'401-57-402A',st:'Issued',apply:'2026-04-10',issue:'2026-04-15',expire:'2026-10-12',kw:null,lat:33.443,lon:-112.98812,cs:'zip-approx',age:12,bkt:'green',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'e19ff565-9366-4477-aa9b-66c7e80c4b60'},
+  {p:'BLDR2602291',addr:'2907 N 391ST AVE',city:'TONOPAH',zip:'85354',parcel:'506-45-150A',st:'Issued',apply:'2026-03-23',issue:'2026-04-09',expire:'2026-10-10',kw:null,lat:33.41964,lon:-112.96172,cs:'zip-approx',age:30,bkt:'green',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'c93c5d8e-753f-4ef1-a3aa-5ca285b87e76'},
+  {p:'BLDR2602145',addr:'1127 N 381ST DR',city:'TONOPAH',zip:'85354',parcel:'506-45-295B',st:'Issued',apply:'2026-03-18',issue:'2026-03-19',expire:'2026-10-14',kw:null,lat:33.4174,lon:-112.9542,cs:'zip-approx',age:35,bkt:'green',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'f4e4f21b-4d66-4d7d-bce8-4de6e0f8a96e'},
+  {p:'BLDR2600729',addr:'38402 W LATHAM ST',city:'TONOPAH',zip:'85354',parcel:'506-45-350',st:'Issued',apply:'2026-01-30',issue:'2026-02-19',expire:'2026-08-18',kw:null,lat:33.44668,lon:-112.92428,cs:'zip-approx',age:82,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM ON EXISTING MANUFACTURED HOME // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'8cf572c0-817f-42be-b67b-c5e5c38de634'},
+  {p:'BLDR2600204',addr:'32828 N 228TH DR',city:'WITTMANN',zip:'85361',parcel:'503-17-007N',st:'Fees Due',apply:'2026-01-12',issue:'2026-01-26',expire:'2026-07-25',kw:null,lat:33.6834,lon:-112.51948,cs:'zip-approx',age:100,bkt:'red',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'c553d056-dd29-4adb-a1a3-cd672239dbc5'},
+  {p:'BLDR2601598',addr:'37203 W HILTON AVE',city:'TONOPAH',zip:'85354',parcel:'506-41-139D',st:'Fees Due',apply:'2026-02-27',issue:'',expire:'',kw:null,lat:33.50364,lon:-112.97004,cs:'zip-approx',age:54,bkt:'yellow',desc:'ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM ON EXISTING MANUFACTURED HOME // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER\'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705',permitId:'0996b598-8a02-4fb4-a633-60515770fd41'}
+];
+
+const BUCKET_COLORS = {green:'#22c55e', yellow:'#eab308', red:'#ef4444'};
+const TYLER_BASE = 'https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/';
+
+// Init map centered on Tonopah
+const map = L.map('map', {zoomControl:true, tap:false}).setView([33.51, -112.70], 10);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  subdomains:'abcd', maxZoom: 20
+}).addTo(map);
+
+const markers = [];
+let visible = {green:true, yellow:true, red:true};
+
+const makeIcon = (bkt, idx) => L.divIcon({
+  className:'', html:'<div class="marker-pin '+bkt+'"><span class="num">'+idx+'</span></div>',
+  iconSize:[22,22], iconAnchor:[11,22], popupAnchor:[0,-20]
+});
+
+const ageBadge = (age) => {
+  if (age == null) return '';
+  if (age > 76) return '<span class="badge b-red">'+age+'d OLD</span>';
+  if (age > 30) return '<span class="badge b-yellow">'+age+'d</span>';
+  return '<span class="badge b-green">'+age+'d FRESH</span>';
+};
+
+const statusBadge = (st, bkt) => '<span class="badge b-'+bkt+'">'+st+'</span>';
+const approxBadge = (cs) => cs==='zip-approx' ? '<span class="badge b-approx">ZIP-APPROX</span>' : '';
+
+PERMITS.forEach((r, i) => {
+  const icon = makeIcon(r.bkt, i+1);
+  const m = L.marker([r.lat, r.lon], {icon}).addTo(map);
+  const kwLine = r.kw ? '<div class="pop-kv pop-kw">System Size: ' + r.kw + ' kW</div>'
+                      : '<div class="pop-kv"><b>kW:</b> <em>verify at door</em></div>';
+  const navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(r.addr + ', ' + r.city + ', AZ ' + r.zip);
+  const tylerUrl = TYLER_BASE + r.permitId;
+  const html = ''
+    + '<div class="pop-h">' + r.addr + '</div>'
+    + '<div class="pop-kv">' + r.city + ', AZ ' + r.zip + '</div>'
+    + '<div class="pop-kv">' + statusBadge(r.st, r.bkt) + ' ' + ageBadge(r.age) + ' ' + approxBadge(r.cs) + '</div>'
+    + kwLine
+    + '<div class="pop-kv"><b>Permit:</b> ' + r.p + '</div>'
+    + '<div class="pop-kv"><b>Parcel:</b> ' + r.parcel + '</div>'
+    + '<div class="pop-kv"><b>Applied:</b> ' + (r.apply||'-') + (r.issue ? ' · <b>Issued:</b> ' + r.issue : '') + '</div>'
+    + (r.desc ? '<div class="pop-kv" style="margin-top:4px;font-style:italic;color:#9fb1c3;font-size:11px;">' + r.desc + '</div>' : '')
+    + '<a class="pop-nav" href="' + navUrl + '" target="_blank" rel="noopener">Navigate with Google Maps</a>';
+  m.bindPopup(html);
+  markers.push({m, bkt: r.bkt});
+});
+
+// Fit bounds
+if (markers.length) {
+  const g = L.featureGroup(markers.map(x=>x.m));
+  map.fitBounds(g.getBounds().pad(0.15));
+}
+
+// Legend filter
+document.querySelectorAll('#legend .pill').forEach(p => {
+  p.addEventListener('click', () => {
+    const b = p.dataset.bkt;
+    visible[b] = !visible[b];
+    p.classList.toggle('off', !visible[b]);
+    markers.forEach(x => {
+      if (visible[x.bkt]) x.m.addTo(map);
+      else map.removeLayer(x.m);
+    });
+  });
+});
+
+document.getElementById('count').textContent = PERMITS.length + ' permits · tap a pin';
+</script>
+</body>
+</html>
