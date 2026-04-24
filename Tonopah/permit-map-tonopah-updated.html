@@ -198,6 +198,7 @@
   <button class="fchip" data-filter="purple">🟣 Has kW</button>
   <button class="fchip" data-filter="nih">NIH</button>
   <button class="fchip" data-filter="called">Called</button>
+  <button class="fchip" data-filter="hidden">🚫 Hidden</button>
 </div>
 
 <div id="map"></div>
@@ -1538,6 +1539,10 @@ function renderMarkers() {
 
   const filtered = state.permits.filter(p => {
     if (p.lat == null || p.lng == null) return false;
+    // "Hidden" bucket = not-interested leads. Show ONLY them in the Hidden view,
+    // and EXCLUDE them from every other view so Blake's list stays clean.
+    if (activeFilter === 'hidden') return p.outcome === 'notint';
+    if (p.outcome === 'notint') return false;
     if (activeFilter === 'all') return true;
     if (activeFilter === 'unknocked') return isActiveRoute(p) && !p.outcome;
     if (activeFilter === 'green')  return bucketForPin(p) === 'green';
@@ -1704,6 +1709,7 @@ function closeDetail() {
   saveLocal();
   currentDetailId = null;
   document.getElementById('detail').classList.remove('open');
+  renderMarkers(); // refresh pins so dispositioned leads disappear / change color after close
 }
 
 /* ── Outcome button toggling (updates state in memory, not pushed until Update) ── */
@@ -1729,7 +1735,7 @@ document.querySelectorAll('.obtn').forEach(btn => {
       btn.classList.add('active');
       btn.classList.add(p.outcome);
     }
-    scheduleSave(); // localStorage only
+    scheduleSave(); // localStorage only — pin re-renders on detail close
   });
 });
 
