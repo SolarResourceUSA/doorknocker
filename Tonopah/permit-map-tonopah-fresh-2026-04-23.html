@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Tonopah Permit Map – FRESH PULL Apr 23 2026 – Solar Resource USA</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117; color: #f0f0f0;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    padding: 12px 16px 8px;
+    background: linear-gradient(135deg, #1a1f2e, #2d1a0d);
+    border-bottom: 1px solid #3a2a1e;
+  }
+  .logo { font-size: 11px; letter-spacing: 2px; color: #f59e0b; text-transform: uppercase; margin-bottom: 4px; }
+  .header h1 { font-size: 17px; font-weight: 700; color: #fff; }
+  .header .sub { font-size: 12px; color: #888; margin-top: 2px; }
+  .header .zone { font-size: 10px; color: #f59e0b; margin-top: 4px; background: #2d1a0d; padding: 3px 8px; border-radius: 6px; display: inline-block; }
+
+  /* ── Build summary banner ── */
+  .build-summary {
+    background: #0d1520; border-bottom: 1px solid #1e3040;
+    padding: 8px 12px; font-size: 10px; color: #64748b; line-height: 1.6;
+  }
+  .build-summary strong { color: #f59e0b; }
+  .build-summary .rule0 { color: #94a3b8; margin-top: 2px; }
+  .build-summary .draft-tag {
+    display: inline-block; background: #3b1a00; color: #f59e0b;
+    border: 1px solid #5c3a00; border-radius: 4px; padding: 1px 6px;
+    font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    margin-left: 6px;
+  }
+
+  /* ── Sync bar ── */
+  #sync-bar {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: #111827; border-bottom: 1px solid #1e293b;
+    padding: 6px 14px; font-size: 11px; color: #64748b;
+    min-height: 28px; transition: all 0.3s;
+  }
+  #sync-bar.saving  { background: #0a2540; color: #4fc3f7; }
+  #sync-bar.saved   { background: #0d2a0d; color: #66bb6a; }
+  #sync-bar.error   { background: #2a0f0f; color: #f87171; }
+
+  /* ── Stats bar ── */
+  .stats { display: flex; gap: 4px; padding: 6px 8px; background: #0f1117; border-bottom: 1px solid #252d40; }
+  .stat {
+    flex: 1; background: #141926; border: 1px solid #252d40;
+    border-radius: 8px; padding: 5px 4px; text-align: center;
+  }
+  .stat-num { font-size: 16px; font-weight: 800; color: #fff; }
+  .stat-num.cyan    { color: #22d3ee; }
+  .stat-num.orange  { color: #fb923c; }
+  .stat-num.red     { color: #f87171; }
+  .stat-num.green   { color: #4ade80; }
+  .stat-lbl { font-size: 8px; text-transform: uppercase; letter-spacing: 0.6px; color: #555; margin-top: 1px; }
+
+  /* ── Filter chips ── */
+  .filters {
+    display: flex; gap: 5px; flex-wrap: wrap; padding: 7px 8px;
+    background: #0f1117; border-bottom: 1px solid #252d40; overflow-x: auto;
+  }
+  .fchip {
+    background: #1e2438; color: #8b95b3; border: 1.5px solid #2a3040;
+    border-radius: 16px; padding: 4px 10px; font-size: 11px; font-weight: 600;
+    cursor: pointer; font-family: inherit; -webkit-appearance: none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0); transition: all 0.15s; white-space: nowrap;
+  }
+  .fchip.active { background: #3a2a0d; color: #f59e0b; border-color: #5c4a1e; }
+  .fchip.fa-chip.active  { background: #0d2a38; color: #22d3ee; border-color: #1a5a70; }
+  .fchip.pi-chip.active  { background: #3b2000; color: #fb923c; border-color: #7a4000; }
+  .fchip.ry-chip.active  { background: #2a0d0d; color: #f87171; border-color: #6e2e2e; }
+  .fchip.fi-chip.active  { background: #0d2a0d; color: #4ade80; border-color: #2e6e2e; }
+
+  /* ── Map ── */
+  #map { width: 100%; height: calc(100vh - 260px); min-height: 360px; background: #e8eef2; }
+
+  /* Pin colors by bucket */
+  .pin {
+    width: 26px; height: 26px; border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg); border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pin-inner { transform: rotate(45deg); color: #fff; font-size: 11px; font-weight: 800; }
+  .pin.bk-fa   { background: #06b6d4; }   /* Fresh Applied — cyan */
+  .pin.bk-pi   { background: #f97316; }   /* Possibly Installed — orange */
+  .pin.bk-ry   { background: #ef4444; }   /* Retain for 1 Year — red */
+  .pin.bk-fi   { background: #22c55e; }   /* Fresh Issued — green */
+  .pin.bk-nih  { background: #a78bfa; }
+  .pin.bk-sold { background: #3b82f6; }
+
+  /* ── Popup / detail sheet ── */
+  .leaflet-popup-content-wrapper {
+    background: #1a1f2e; color: #f0f0f0;
+    border: 1px solid #3a4556; border-radius: 12px;
+  }
+  .leaflet-popup-tip { background: #1a1f2e; }
+  .leaflet-popup-content { margin: 10px; font-size: 12px; line-height: 1.5; }
+  .leaflet-popup-close-button { color: #888 !important; font-size: 18px !important; }
+
+  .detail {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #1a1f2e; border-top: 2px solid #f59e0b;
+    border-radius: 16px 16px 0 0;
+    padding: 14px 14px 20px; max-height: 62vh; overflow-y: auto;
+    transform: translateY(100%); transition: transform 0.25s;
+    z-index: 1000;
+  }
+  .detail.open { transform: translateY(0); }
+  .detail-close {
+    position: absolute; top: 10px; right: 12px;
+    background: none; border: none; color: #888;
+    font-size: 22px; cursor: pointer;
+  }
+  .detail-addr { font-size: 15px; font-weight: 700; color: #fff; padding-right: 30px; }
+  .detail-meta { font-size: 12px; color: #9aa3b8; margin-top: 3px; margin-bottom: 8px; }
+  .bucket-badge {
+    display: inline-block; border-radius: 10px; padding: 2px 8px;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.8px;
+    text-transform: uppercase; margin-right: 4px;
+  }
+  .bb-fa { background: #0e4d5c; color: #22d3ee; }
+  .bb-pi { background: #4a2000; color: #fb923c; }
+  .bb-ry { background: #3b0d0d; color: #f87171; }
+  .bb-fi { background: #0d3b0d; color: #4ade80; }
+
+  .detail-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    font-size: 12px; padding: 5px 0; border-bottom: 1px solid #252d40;
+  }
+  .detail-row .k { color: #94a3b8; font-weight: 600; min-width: 110px; flex-shrink: 0; }
+  .detail-row .v { color: #e5e7eb; text-align: right; word-break: break-word; max-width: 60%; }
+  .detail-row .v.battery-yes { color: #4ade80; font-weight: 700; }
+  .detail-row .v.battery-no  { color: #9ca3af; }
+  .detail-row .v.warn        { color: #fb923c; font-weight: 600; }
+  .detail-row .v.stalled-tag { color: #f87171; font-size: 10px; font-weight: 700; }
+
+  .desc-box {
+    margin-top: 10px; font-size: 10px; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;
+  }
+  .desc-content {
+    font-size: 11px; color: #cbd5e1; background: #0d111c;
+    border: 1px solid #252d40; border-radius: 8px;
+    padding: 8px; line-height: 1.5; max-height: 100px; overflow-y: auto;
+  }
+
+  .notes-wrap { margin-top: 10px; }
+  .notes-wrap label { font-size: 10px; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.8px; }
+  .notes-wrap textarea {
+    width: 100%; min-height: 48px; margin-top: 4px;
+    background: #0d111c; color: #f0f0f0;
+    border: 1px solid #2a3040; border-radius: 8px;
+    padding: 8px; font-size: 13px; font-family: inherit; resize: vertical;
+  }
+
+  /* Outcome buttons */
+  .outcomes {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px;
+  }
+  .obtn {
+    background: #1e2438; color: #c4cde0; border: 1.5px solid #2a3040;
+    border-radius: 10px; padding: 8px 4px; font-size: 10px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    -webkit-tap-highlight-color: rgba(0,0,0,0); transition: all 0.15s;
+  }
+  .obtn.active.apptset  { background: #0d3b0d; color: #66bb6a; border-color: #2e6e2e; }
+  .obtn.active.notint   { background: #3b0d0d; color: #f87171; border-color: #6e2e2e; }
+  .obtn.active.hassolar { background: #0d2a3b; color: #4fc3f7; border-color: #1e4d7a; }
+  .obtn.active.renter   { background: #3b250d; color: #ffa726; border-color: #6e4e2e; }
+  .obtn.active.nih      { background: #2a0d3b; color: #a78bfa; border-color: #4d2e7a; }
+  .obtn.active.called   { background: #3b280d; color: #fbbf24; border-color: #7a5a1e; }
+  .obtn.active.notmoved { background: #251a3b; color: #c4b5fd; border-color: #4a3a7a; }
+  .obtn.active.soldu    { background: #0d3b2a; color: #6ee7b7; border-color: #2e6e58; }
+
+  /* Update button */
+  .update-btn {
+    width: 100%; margin-top: 12px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff; border: none; border-radius: 10px;
+    padding: 12px; font-size: 14px; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+  }
+  .update-btn:active { transform: scale(0.98); }
+
+  /* Legend */
+  .legend {
+    position: fixed; bottom: 12px; left: 12px; z-index: 999;
+    background: rgba(15,17,23,0.90); border: 1px solid #252d40;
+    border-radius: 10px; padding: 8px 10px; font-size: 10px;
+  }
+  .legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Solar Resource USA</div>
+  <h1>🏜 Tonopah AZ — Blake · Fresh Pull</h1>
+  <div class="sub">Maricopa County · Tonopah · Arlington · Buckeye · Wittmann · Morristown · APS</div>
+  <span class="zone">Map View · 4-Bucket Classification · Built Apr 23 2026</span>
+</div>
+
+<div class="build-summary">
+  <strong>Rule 0 Pre-flight:</strong> Pulled 142 permits across 6 ZIPs (85354 · 85326 · 85361 · 85342 · 85322 · 85353) · Both permit types (Residential Rooftop Solar + SolarAPP+) · Applied 04/23/2025–04/23/2026
+  <span class="draft-tag">DRAFT — Rules 2·4·5 pending</span>
+  <div class="rule0">
+    Status histogram: Complete 97 (EXCLUDED) · Issued 16 · Withdrawn 9 · Expired 6 · In Review 5 · Denied 4 · Requires Customer Attention 3 · Fees Due 2 → <strong>45 kept</strong>
+    &nbsp;|&nbsp; Bucket split: Fresh Applied 10 · Possibly Installed 3 · Retain 1yr 27 · Fresh Issued 5
+    &nbsp;|&nbsp; Rules pending: Rule 2 (satellite) · Rule 4 (assessor enrichment partial) · Rule 5 (XLS contractor/valuation partial)
+  </div>
+</div>
+
+<div id="sync-bar">⏳ Loading state from GitHub…</div>
+
+<div class="stats">
+  <div class="stat"><div id="stat-fa"  class="stat-num cyan">10</div><div class="stat-lbl">Fresh Applied</div></div>
+  <div class="stat"><div id="stat-pi"  class="stat-num orange">3</div><div class="stat-lbl">Poss. Installed</div></div>
+  <div class="stat"><div id="stat-ry"  class="stat-num red">27</div><div class="stat-lbl">Retain 1yr</div></div>
+  <div class="stat"><div id="stat-fi"  class="stat-num green">5</div><div class="stat-lbl">Fresh Issued</div></div>
+  <div class="stat"><div id="stat-new" class="stat-num" style="color:#a78bfa">17</div><div class="stat-lbl">New Additions</div></div>
+</div>
+
+<div class="filters" id="filters">
+  <button class="fchip active"    data-filter="all">All (45)</button>
+  <button class="fchip fa-chip"   data-filter="fa">🔵 Fresh Applied (10)</button>
+  <button class="fchip pi-chip"   data-filter="pi">🟠 Poss. Installed (3)</button>
+  <button class="fchip ry-chip"   data-filter="ry">🔴 Retain 1yr (27)</button>
+  <button class="fchip fi-chip"   data-filter="fi">🟢 Fresh Issued (5)</button>
+  <button class="fchip new-chip"   data-filter="new">🆕 New Additions (17)</button>
+  <button class="fchip"           data-filter="unknocked">Unknocked</button>
+  <button class="fchip"           data-filter="85354">85354</button>
+  <button class="fchip"           data-filter="85326">85326</button>
+  <button class="fchip"           data-filter="85361">85361</button>
+  <button class="fchip"           data-filter="85342">85342</button>
+  <button class="fchip"           data-filter="85353">85353</button>
+</div>
+
+<div id="map"></div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-row"><div class="legend-dot" style="background:#06b6d4"></div><span style="color:#22d3ee">Fresh Applied</span></div>
+  <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div><span style="color:#fb923c">Poss. Installed</span></div>
+  <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div><span style="color:#f87171">Retain 1yr</span></div>
+  <div class="legend-row"><div class="legend-dot" style="background:#22c55e"></div><span style="color:#4ade80">Fresh Issued</span></div>
+</div>
+
+<!-- Detail sheet -->
+<div class="detail" id="detail">
+  <button class="detail-close" onclick="closeDetail()">×</button>
+  <div class="detail-addr" id="d-addr">—</div>
+  <div class="detail-meta" id="d-meta">—</div>
+
+  <div class="detail-row"><span class="k">Status</span><span class="v" id="d-status">—</span></div>
+  <div class="detail-row"><span class="k">Applied</span><span class="v" id="d-applied">—</span></div>
+  <div class="detail-row"><span class="k">Issued</span><span class="v" id="d-issued">—</span></div>
+  <div class="detail-row"><span class="k">Expiration</span><span class="v" id="d-expire">—</span></div>
+  <div class="detail-row"><span class="k">Finaled</span><span class="v" id="d-finaled">—</span></div>
+  <div class="detail-row"><span class="k">Contractor</span><span class="v" id="d-contractor">—</span></div>
+  <div class="detail-row"><span class="k">License (ROC#)</span><span class="v" id="d-license">—</span></div>
+  <div class="detail-row"><span class="k">Contractor ☎</span><span class="v" id="d-phone">—</span></div>
+  <div class="detail-row"><span class="k">Contractor ✉</span><span class="v" id="d-email">—</span></div>
+  <div class="detail-row"><span class="k">Permit valuation</span><span class="v" id="d-valuation" style="font-weight:700;color:#fbbf24">—</span></div>
+  <div class="detail-row"><span class="k" id="d-size-label">System size</span><span class="v" id="d-size" style="color:#94a3b8">—</span></div>
+  <div class="detail-row"><span class="k">Battery</span><span class="v" id="d-battery">—</span></div>
+  <div class="detail-row"><span class="k">Owner</span><span class="v" id="d-owner">—</span></div>
+  <div class="detail-row"><span class="k">Owner type</span><span class="v" id="d-owner-type">—</span></div>
+  <div class="detail-row"><span class="k">Last sold</span><span class="v" id="d-last-sold">—</span></div>
+  <div class="detail-row"><span class="k">Parcel</span><span class="v" id="d-parcel">—</span></div>
+  <div class="detail-row"><span class="k">Parcel type</span><span class="v" id="d-parcel-type">—</span></div>
+  <div class="detail-row"><span class="k">Satellite check</span><span class="v" id="d-sat">—</span></div>
+
+  <div class="desc-box">Permit Description</div>
+  <div class="desc-content" id="d-description">—</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+    <a id="d-apple" target="_blank" style="background:#1e2438;color:#e5e7eb;border:1.5px solid #2a3040;border-radius:10px;padding:8px 4px;font-size:11px;font-weight:700;text-align:center;text-decoration:none">🗺 Apple Maps</a>
+    <a id="d-gsat"  target="_blank" style="background:#1e2438;color:#e5e7eb;border:1.5px solid #2a3040;border-radius:10px;padding:8px 4px;font-size:11px;font-weight:700;text-align:center;text-decoration:none">🛰 Google Satellite</a>
+  </div>
+  <div style="margin-top:6px;text-align:center">
+    <a id="d-portal" target="_blank" style="font-size:10px;color:#64748b;text-decoration:none">🔗 View on Maricopa Permit Center</a>
+  </div>
+
+  <div class="notes-wrap">
+    <label>Notes</label>
+    <textarea id="d-notes" placeholder="Notes from door conversation…"></textarea>
+  </div>
+
+  <div class="outcomes">
+    <button class="obtn" data-outcome="apptset">Appt Set</button>
+    <button class="obtn" data-outcome="notint">Not Interested</button>
+    <button class="obtn" data-outcome="hassolar">Has Solar</button>
+    <button class="obtn" data-outcome="renter">Renter</button>
+    <button class="obtn" data-outcome="nih">NIH</button>
+    <button class="obtn" data-outcome="called">Called Back</button>
+    <button class="obtn" data-outcome="notmoved">Not Moved In</button>
+    <button class="obtn" data-outcome="soldu">SOLD 🎉</button>
+  </div>
+
+  <button class="update-btn" id="update-btn" onclick="saveAndPush()">💾 Update</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================================
+   Tonopah AZ — Blake's permit map (FRESH PULL Apr 23 2026)
+   Built from: Maricopa County Tyler EnerGov portal
+   Search: 6 ZIPs, both solar permit types, 12-month applied-date window
+   Filtered: 142 pulled → 97 Complete excluded → 45 kept → 4 buckets
+   Territory: Maricopa County, utility: APS
+   ============================================================================ */
+
+const TERRITORY = {
+  name: 'Tonopah AZ',
+  zips: ['85354','85322','85326','85361','85342','85353'],
+  center: [33.64, -112.69],
+  zoom: 9,
+  county: 'Maricopa',
+  utility: 'APS',
+};
+
+/* ── GitHub sync config ── */
+const GITHUB_REPO   = 'SolarResourceUSA/doorknocker';
+const GITHUB_BRANCH = 'main';
+const STATE_FILE    = 'tonopah-permit-state.json';
+const LS_KEY        = 'srusa-tonopah-permit-state-v1';
+const PAT_LS_KEY    = 'srusa-gh-pat';
+
+(function installTokenFromHash() {
+  try {
+    const hash = window.location.hash || '';
+    const m = hash.match(/[#&]t=([^&]+)/);
+    if (m && m[1]) {
+      localStorage.setItem(PAT_LS_KEY, decodeURIComponent(m[1]).trim());
+      const cleanHash = hash.replace(/[#&]t=[^&]+/, '').replace(/^#&/, '#');
+      const cleanUrl = window.location.pathname + window.location.search + (cleanHash === '#' ? '' : cleanHash);
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  } catch(e) {}
+})();
+function getGitHubPAT() {
+  let pat = localStorage.getItem(PAT_LS_KEY) || '';
+  if (!pat) {
+    pat = window.prompt('Enter the Solar Resource USA sync passcode (one time per device):') || '';
+    if (pat) localStorage.setItem(PAT_LS_KEY, pat.trim());
+  }
+  return pat.trim();
+}
+
+/* ============================================================================
+   PERMIT SEED DATA — Fresh pull Apr 23 2026
+   Bucket codes:
+     fa = Fresh Applied / Just Submitted  (pre-issuance, hot leads)
+     pi = Possibly Installed              (issued 30-60 days ago)
+     ry = Retain for 1 Year              (withdrawn/expired/denied/stalled)
+     fi = Fresh Issued                   (issued ≤20 days ago)
+
+   Rule 0 status histogram:
+     Complete: 97 (EXCLUDED – Rule 1)
+     Issued: 16 | Withdrawn: 9 | Expired: 6 | In Review: 5 | Denied: 4
+     Requires Customer Attention: 3 | Fees Due: 2
+   DRAFT: Rules 2 (satellite), 4 (assessor), 5 (XLS contractor) pending full enrichment.
+   Contractor/valuation from Maricopa Weekly XLS where already enriched in prior sessions.
+   Owner/parcelType from mcassessor.maricopa.gov where already enriched.
+   ============================================================================ */
+const PERMITS_SEED = [
+
+  /* ════════════════════════════════════════════════════════════════
+     BUCKET 1 — FRESH APPLIED / JUST SUBMITTED (10 permits)
+     Priority hot leads. Pre-issuance. Sorted by applied date DESC.
+     ════════════════════════════════════════════════════════════════ */
+
+  {
+    id:"BLDR2603159", isNew:true, bucket:"fa",
+    address:"3875 N 371ST AVE TONOPAH AZ 85354", zip:"85354",
+    status:"Requires Customer Attention", statusLabel:"Requires Customer Attention",
+    applied:"2026-04-22", issued:null, expire:null, finaled:null,
+    parcel:"—", description:"6.630 kW DC Roof Mounted Solar",
+    systemKW:6.63, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.490792, lng:-112.850337,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2603159",
+    notes:"Assumption: ZIP centroid offset. Applied 1 day ago — hottest fresh lead."
+  },
+  {
+    id:"BLDR2603076", isNew:true, bucket:"fa",
+    address:"43418 W ENCANTO BLVD TONOPAH AZ 85354", zip:"85354",
+    status:"In Review", statusLabel:"In Review",
+    applied:"2026-04-20", issued:null, expire:null, finaled:null,
+    parcel:"—", description:"INSTALLATION OF A 11.50 KW (AC) PV SYSTEM + BATTERY INTEGRATED // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:11.5, battery:true, batteryModel:"Battery Integrated",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"verify", lat:33.4348, lng:-112.9083,
+    coordSource:"nominatim",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2603076",
+    notes:"Applied 3 days ago. 11.5 kW system with integrated battery — large system. Satellite check needed."
+  },
+  {
+    id:"BLDR2603069", isNew:true, bucket:"fa",
+    address:"302 4TH AVE BUCKEYE AZ 85326", zip:"85326",
+    status:"In Review", statusLabel:"In Review",
+    applied:"2026-04-20", issued:null, expire:null, finaled:null,
+    parcel:"—", description:"INSTALLATION OF A 11 MODULES - ROOF MOUNTED - 4.510 kW DC, 1 BATTERY MODULE // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:4.51, battery:true, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.380823, lng:-112.57987,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2603069",
+    notes:"Applied 3 days ago. 11 modules, 4.51 kW DC. Battery included. Buckeye in-town address."
+  },
+  {
+    id:"BLDR2602943", isNew:true, bucket:"fa",
+    address:"12856 S ZUNI RD BUCKEYE AZ 85326", zip:"85326",
+    status:"Requires Customer Attention", statusLabel:"Requires Customer Attention",
+    applied:"2026-04-15", issued:null, expire:null, finaled:null,
+    parcel:"—", description:"NEW PHOTOVOLTAIC PITCHED ROOF MOUNTED SYSTEM - 12.150 KW DC/9.600 KW AC WITH BATTERY STORAGE SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:12.15, battery:true, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"solar-detected", lat:33.329575, lng:-112.486243,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2602943",
+    notes:"Requires Customer Attention — customer may need to respond to proceed. Applied 8 days ago. 12.15 kW DC / 9.6 kW AC — large residential system with battery."
+  },
+  {
+    id:"BLDR2602638", isNew:false, bucket:"fa",
+    address:"36923 W MONROE ST TONOPAH AZ 85354", zip:"85354",
+    status:"Requires Customer Attention", statusLabel:"Requires Customer Attention",
+    applied:"2026-04-03", issued:null, expire:null, finaled:null,
+    parcel:"506-41-113H", description:"7.020 kW DC ROOF MOUNTED SOLAR",
+    systemKW:7.02, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"RD DESIGN TEAM INC", ownerType:"Entity", lastSold:null, parcelType:"Land",
+    satelliteStatus:"verify", lat:33.447924, lng:-112.846898,
+    coordSource:"nominatim",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/621d6fb4-9ef4-4cef-baef-0de36d879ce6",
+    notes:"Owner is a corporate entity (RD DESIGN TEAM INC). Parcel type Land — verify house is built. No battery — retrofit opportunity?"
+  },
+  {
+    id:"BLDR2601598", isNew:false, bucket:"fa",
+    address:"37203 W HILTON AVE TONOPAH AZ 85354", zip:"85354",
+    status:"Fees Due", statusLabel:"Fees Due",
+    applied:"2026-02-27", issued:null, expire:null, finaled:null,
+    parcel:"506-41-139D", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM ON EXISTING MANUFACTURED HOME // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"WEAVER LOGAN", ownerType:"Individual", lastSold:"2025-11-01", parcelType:"Mobile Home",
+    satelliteStatus:"clear", lat:33.426013, lng:-112.853354,
+    coordSource:"nominatim",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0996b598-8a02-4fb4-a633-60515770fd41",
+    notes:"Fees Due — stalled on fee payment. Homeowner WEAVER LOGAN, recent buyer (Nov 2025). Tesla Integrated battery. Good candidate — find out why fees are hung up."
+  },
+  {
+    id:"BLDR2600845", isNew:false, bucket:"fa",
+    address:"22211 W WILDFLOWER DR WITTMANN AZ 85361", zip:"85361",
+    status:"In Review", statusLabel:"In Review",
+    applied:"2026-02-03", issued:null, expire:null, finaled:null,
+    parcel:"503-39-081", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // ON EXISTING MANUFACTURED HOME // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"MAKULA LAURA ANN/CHARLES JOHN III", ownerType:"Individual", lastSold:"2021-12-01", parcelType:"Mobile Home",
+    satelliteStatus:"clear", lat:33.777415, lng:-112.54035,
+    coordSource:"nominatim",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/6841a8dc-91fe-4f5d-b2a1-21662e35544d",
+    notes:"In Review for 79 days — unusually long review. Manufactured home. Tesla Integrated battery."
+  },
+  {
+    id:"BLDR2506807", isNew:false, bucket:"fa",
+    address:"22347 W PATTON RD WITTMANN AZ 85361", zip:"85361",
+    status:"In Review", statusLabel:"In Review",
+    applied:"2025-08-25", issued:null, expire:null, finaled:null,
+    parcel:"503-34-018F", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"MCHENRY MATTHEW", ownerType:"Individual", lastSold:null, parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.738616, lng:-112.544695,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/f628309b-f565-480d-972d-f1142b7dcab3",
+    notes:"In Review for 241 DAYS — extremely stalled pre-issuance. Owner MCHENRY MATTHEW. No battery — retrofit opp. Worth a door knock."
+  },
+  {
+    id:"BLDR2505482", isNew:true, bucket:"fa",
+    address:"20435 W ELLIOT RD BUCKEYE AZ 85326", zip:"85326",
+    status:"In Review", statusLabel:"In Review",
+    applied:"2025-07-10", issued:null, expire:null, finaled:null,
+    parcel:"—", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM//SOLAREDGE BATTERY// WHICH INCLUDES REDUCTION OF MAIN CIRCUIT BREAKER TO 175 AMPS // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"SolarEdge Home Battery",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"solar-detected", lat:33.348369, lng:-112.490971,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2505482",
+    notes:"In Review for 288 DAYS — very stalled. SolarEdge battery + main breaker reduction to 175A. Prime door-knock lead."
+  },
+  {
+    id:"BLDR2600204", isNew:false, bucket:"fa",
+    address:"32828 N 228TH DR WITTMANN AZ 85361", zip:"85361",
+    status:"Fees Due", statusLabel:"Fees Due",
+    applied:"2026-01-12", issued:"2026-01-26", expire:"2026-07-25", finaled:null,
+    parcel:"503-17-007N", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"BERES KEITH R/CALVIN-BERES DEBRA", ownerType:"Individual", lastSold:"2025-09-01", parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.781029, lng:-112.554381,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c553d056-dd29-4adb-a1a3-cd672239dbc5",
+    notes:"Fees Due AFTER issuance — unusual. Permit was issued Jan 26 but now fees owed. Recent buyer (Sep 2025). Tesla Integrated battery. Assumption: issueDays calc bypassed since status is Fees Due (pre-issuance bucket)."
+  },
+
+  /* ════════════════════════════════════════════════════════════════
+     BUCKET 2 — POSSIBLY INSTALLED (3 permits)
+     Issued 30-60 days ago. Panels may already be on the roof.
+     SATELLITE CHECK BEFORE KNOCKING — Rule 2.
+     ════════════════════════════════════════════════════════════════ */
+
+  {
+    id:"BLDR2602145", isNew:false, bucket:"pi",
+    address:"1127 N 381ST DR TONOPAH AZ 85354", zip:"85354",
+    status:"Issued", statusLabel:"Issued",
+    applied:"2026-03-18", issued:"2026-03-19", expire:"2026-10-14", finaled:null,
+    parcel:"506-45-295B", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:"Empower Electric Solar", licenseROC:"346621", contractorPhone:"800-306-6953", contractorEmail:"arizonapermits@empoweryourhome.com", valuation:27681,
+    owner:"Joy L, James M & Deborah Dement", ownerType:"Individual", lastSold:"2018-07-01", parcelType:"Mobile Home",
+    satelliteStatus:"clear", lat:33.459397, lng:-112.872855,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/f4e4f21b-4d66-4d7d-bce8-4de6e0f8a96e",
+    notes:"Issued 35 days ago. Possibly installed. Est kW: ≈9.0 kW (est from $27,681 - $10,000 batt / $2,000). Satellite showed clear roof previously — reverify."
+  },
+  {
+    id:"BLDR2600318", isNew:false, bucket:"pi",
+    address:"22503 W PATTON RD WITTMANN AZ 85361", zip:"85361",
+    status:"Issued", statusLabel:"Issued",
+    applied:"2026-01-15", issued:"2026-03-16", expire:"2026-09-12", finaled:null,
+    parcel:"503-34-016T", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:"Freedom Forever Arizona", licenseROC:"", contractorPhone:"602-888-7196", contractorEmail:"permitsarizona@freedomforever.com", valuation:53888,
+    owner:"Eric J Ramsdell & Amber B Gaszsi-Ramsdell", ownerType:"Individual", lastSold:null, parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.738616, lng:-112.547971,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/dae8f6e0-a6f5-43ab-acdf-a08bf4aa194d",
+    notes:"Issued 38 days ago. Freedom Forever AZ. Est kW: ≈22.0 kW (est from $53,888 - $10,000 / $2,000) — large system. Satellite was clear previously — reverify."
+  },
+  {
+    id:"BLDR2601941", isNew:false, bucket:"pi",
+    address:"6215 S EL MIRAGE RD TOLLESON AZ 85353", zip:"85353",
+    status:"Issued", statusLabel:"Issued",
+    applied:"2026-03-11", issued:"2026-03-12", expire:"2026-09-08", finaled:null,
+    parcel:"500-69-032", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // TESLA POWERWALL 3 BATTERY // WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Powerwall 3",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"EDWARD A AND GAYLE L BALKE TRUST", ownerType:"Entity", lastSold:null, parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.388703, lng:-112.323083,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/edcd1f1d-9e69-46a7-b96b-e216744071bb",
+    notes:"Issued 42 days ago. Tesla Powerwall 3 + MPU to 225A Solar Ready. Trust ownership. Tolleson — edge of territory. Satellite check needed."
+  },
+
+  /* ════════════════════════════════════════════════════════════════
+     BUCKET 3 — RETAIN FOR 1 YEAR (27 permits)
+     Includes: Withdrawn (9), Expired (6), Denied (4),
+               Stalled Issued >60 days (8)
+     Sorted by ZIP, then applied date DESC.
+     ════════════════════════════════════════════════════════════════ */
+
+  /* — 85354 Tonopah — */
+  {
+    id:"BLDR2601231", isNew:false, bucket:"ry",
+    address:"805 S 348TH AVE TONOPAH AZ 85354", zip:"85354",
+    status:"Issued", statusLabel:"Issued — STALLED 62 days",
+    applied:"2026-02-16", issued:"2026-02-20", expire:"2026-09-12", finaled:null,
+    parcel:"504-12-005T", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // (2) TESLA POWERWALL 3 BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Powerwall 3 (x2)",
+    contractor:"Our World Energy", licenseROC:"", contractorPhone:"623-850-5700", contractorEmail:"permits@ourworldenergy.com", valuation:27150,
+    owner:"James Edwin Moreland Jr & Shana A", ownerType:"Individual", lastSold:"2019-03-01", parcelType:"Mobile Home",
+    satelliteStatus:"clear", lat:33.43922, lng:-112.800849,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/ac7269ff-6e1d-4b74-b168-0a659efa0120",
+    notes:"STALLED — issued 62 days ago, no final. (2) Tesla Powerwall 3. Est kW: ≈8.5 kW (est from $27,150 - $10,000 / $2,000). Mobile home compound. Satellite showed no panels — verify in person."
+  },
+  {
+    id:"BLDR2600729", isNew:false, bucket:"ry",
+    address:"38402 W LATHAM ST TONOPAH AZ 85354", zip:"85354",
+    status:"Issued", statusLabel:"Issued — STALLED 63 days",
+    applied:"2026-01-30", issued:"2026-02-19", expire:"2026-08-18", finaled:null,
+    parcel:"506-45-350", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM ON EXISTING MANUFACTURED HOME // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:"Capital Energy LLC", licenseROC:"", contractorPhone:"480-896-5847", contractorEmail:"permits@cptlenergy.com", valuation:9917,
+    owner:"Anthony Angulo Borboa", ownerType:"Individual", lastSold:"2026-01-01", parcelType:"Mobile Home",
+    satelliteStatus:"clear", lat:33.459298, lng:-112.878376,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/8cf572c0-817f-42be-b67b-c5e5c38de634",
+    notes:"STALLED — issued 63 days ago, no final. No battery — retrofit opportunity. Recent buyer (Jan 2026). Est kW: ≈5.0 kW (est from $9,917). Satellite showed no panels — verify."
+  },
+  {
+    id:"BLDR2600280", isNew:false, bucket:"ry",
+    address:"36915 W MONROE ST TONOPAH AZ 85354", zip:"85354",
+    status:"Withdrawn", statusLabel:"Withdrawn",
+    applied:"2026-01-14", issued:null, expire:null, finaled:null,
+    parcel:"506-41-113J", description:"Install 5.67kW PV Solar (roof mounted)",
+    systemKW:5.67, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"GUIZA AARON AGUILERA/CANO MARIA D FARIAS", ownerType:"Individual", lastSold:"2025-11-01", parcelType:"Land",
+    satelliteStatus:"verify", lat:33.447924, lng:-112.846356,
+    coordSource:"nominatim",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c72916f8-9ee3-433a-911e-a4a7dffb75f0",
+    notes:"WITHDRAWN. Exact kW from description: 5.67 kW. No battery — retrofit pitch. Recent buyer (Nov 2025). Applied Jan 2026, withdrew — find out why."
+  },
+  {
+    id:"BLDR2509990", isNew:false, bucket:"ry",
+    address:"34811 W BUCKEYE RD TONOPAH AZ 85354", zip:"85354",
+    status:"Issued", statusLabel:"Issued — STALLED 122 days",
+    applied:"2025-12-16", issued:"2025-12-22", expire:"2026-07-13", finaled:null,
+    parcel:"504-12-082F", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"KALAR LONNIE/ROBERTA", ownerType:"Individual", lastSold:"2025-11-01", parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.435541, lng:-112.801207,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/e548f0aa-238b-415d-b5dc-d43e78b48510",
+    notes:"STALLED 122 days — very stalled. No battery. Recent buyer (Nov 2025). Permit expiring Jul 13 2026. Find out why install is stalled."
+  },
+  {
+    id:"BLDR2509583", isNew:false, bucket:"ry",
+    address:"3212 N 367TH AVE TONOPAH AZ 85354", zip:"85354",
+    status:"Withdrawn", statusLabel:"Withdrawn",
+    applied:"2025-12-02", issued:null, expire:null, finaled:null,
+    parcel:"506-40-175J", description:"Installation of a 8.800 kW rooftop mounted photovoltaic system with battery storage system.",
+    systemKW:8.8, battery:true, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"QUINTANA MANUEL G/QUINTANA AVILA MARIA E", ownerType:"Individual", lastSold:"2017-12-01", parcelType:"Mobile Home",
+    satelliteStatus:"clear", lat:33.416939, lng:-112.841777,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/dec05adb-a352-4102-b4c0-23e0e75beccc",
+    notes:"WITHDRAWN. Exact kW: 8.8 kW with battery. Applied Dec 2025, withdrew — find out why. Good lead: they clearly wanted solar + storage."
+  },
+  {
+    id:"BLDR2507438", isNew:false, bucket:"ry",
+    address:"35536 W HAMMOND DR TONOPAH AZ 85354", zip:"85354",
+    status:"Expired", statusLabel:"Expired",
+    applied:"2025-09-17", issued:"2025-09-19", expire:"2026-03-18", finaled:null,
+    parcel:"506-41-171X", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"HOOKER PHILLIP M/KATHY", ownerType:"Individual", lastSold:"2005-05-01", parcelType:"Mobile Home",
+    satelliteStatus:"clear", lat:33.42391, lng:-112.816481,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0fbff63a-9aab-415f-a93a-b32b80f7bdca",
+    notes:"EXPIRED Mar 18 2026. No battery — retrofit pitch. Long-term owner (since 2005). Permit expired without install."
+  },
+  {
+    id:"BLDR2506027", isNew:true, bucket:"ry",
+    address:"3320 N 329TH DR TONOPAH AZ 85354", zip:"85354",
+    status:"Expired", statusLabel:"Expired",
+    applied:"2025-07-29", issued:"2025-08-01", expire:null, finaled:null,
+    parcel:"504-09-052", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.485730, lng:-112.761655,
+    coordSource:"google-geocoded",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2506027",
+    notes:"EXPIRED. No battery — pitch storage. Owner lookup pending (Rule 4). New permit from Jul 2025 pull."
+  },
+  {
+    id:"BLDR2504155", isNew:true, bucket:"ry",
+    address:"5703 S 339TH AVE TONOPAH AZ 85354", zip:"85354",
+    status:"Withdrawn", statusLabel:"Withdrawn",
+    applied:"2025-05-21", issued:"2025-05-27", expire:null, finaled:null,
+    parcel:"504-32-188", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // TESLA POWERWALL 3 BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Powerwall 3",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.394719, lng:-112.781192,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2504155",
+    notes:"WITHDRAWN. Tesla Powerwall 3. Owner lookup pending. New record — not in previous pull."
+  },
+
+  /* — 85326 Buckeye — */
+  {
+    id:"BLDR2600645", isNew:true, bucket:"ry",
+    address:"113 E MARICOPA RD BUCKEYE AZ 85326", zip:"85326",
+    status:"Issued", statusLabel:"Issued — STALLED 73 days",
+    applied:"2026-01-27", issued:"2026-02-09", expire:null, finaled:null,
+    parcel:"504-53-100A", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // TESLA POWERWALL 3 BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Powerwall 3",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.384709, lng:-112.584018,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2600645",
+    notes:"STALLED 73 days. Same address as BLDR2509950 (Tarpley). NEW record — not in prior pull. Tesla Powerwall 3."
+  },
+  {
+    id:"BLDR2600600", isNew:false, bucket:"ry",
+    address:"12319 S 204TH LN BUCKEYE AZ 85326", zip:"85326",
+    status:"Issued", statusLabel:"Issued — STALLED 83 days",
+    applied:"2026-01-27", issued:"2026-01-30", expire:"2026-08-31", finaled:null,
+    parcel:"400-53-269", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // TESLA POWERWALL 3 BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Powerwall 3",
+    contractor:"Our World Energy", licenseROC:"", contractorPhone:"623-850-5700", contractorEmail:"permits@ourworldenergy.com", valuation:21450,
+    owner:"Luis Arreola Cervantes & Ivette Stephanie Martinez", ownerType:"Individual", lastSold:"2025-02-01", parcelType:"Land",
+    satelliteStatus:"clear", lat:33.318988, lng:-112.490814,
+    coordSource:"google-geocoded",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d027674f-b71f-4353-be8d-efe1bf3966e5",
+    notes:"STALLED 83 days. Our World Energy. Est kW: ≈5.7 kW (est from $21,450 - $10,000 / $2,000). Recent buyer (Feb 2025). Parcel still listed as Land — house may be new construction."
+  },
+  {
+    id:"BLDR2600453", isNew:false, bucket:"ry",
+    address:"20369 W CARVER RD BUCKEYE AZ 85326", zip:"85326",
+    status:"Issued", statusLabel:"Issued — STALLED 87 days",
+    applied:"2026-01-21", issued:"2026-01-26", expire:"2026-07-25", finaled:null,
+    parcel:"400-53-275", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // SOLAREDHE HOME BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"SolarEdge Home Battery",
+    contractor:"Our World Energy", licenseROC:"", contractorPhone:"623-850-5700", contractorEmail:"permits@ourworldenergy.com", valuation:27800,
+    owner:"Fabian Rojo Rodriguez & Lidia E Arrayales Arreola", ownerType:"Individual", lastSold:"2025-06-01", parcelType:"Land",
+    satelliteStatus:"clear", lat:33.340796, lng:-112.488346,
+    coordSource:"nominatim",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/afa29aad-f8ff-4b87-a717-732de8206e2e",
+    notes:"STALLED 87 days. Our World Energy, SolarEdge battery. Est kW: ≈8.9 kW (est from $27,800 - $10,000 / $2,000). Recent buyer (Jun 2025). Note description has typo 'SOLAREDHE' — likely SolarEdge."
+  },
+  {
+    id:"BLDR2602684", isNew:true, bucket:"ry",
+    address:"11305 S 195TH DR BUCKEYE AZ 85326", zip:"85326",
+    status:"Denied", statusLabel:"Denied",
+    applied:"2026-04-06", issued:null, expire:null, finaled:null,
+    parcel:"400-83-019", description:"NEW PHOTOVOLTAIC FLAT ROOF MOUNTED SYSTEM - 11.440 KW DC/11.440 KW AC WITH BATTERY STORAGE SYSTEM // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:11.44, battery:true, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"solar-detected", lat:33.343979, lng:-112.470666,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2602684",
+    notes:"DENIED 17 days ago. Same address as BLDR2509075 (YANNONE). 11.44 kW flat roof — flat roof may be denial reason. Large system with battery. Same parcel denied twice — worth a door knock."
+  },
+  {
+    id:"BLDR2601382", isNew:false, bucket:"ry",
+    address:"20334 W RAINBOW BLVD BUCKEYE AZ 85326", zip:"85326",
+    status:"Withdrawn", statusLabel:"Withdrawn",
+    applied:"2026-02-20", issued:null, expire:null, finaled:null,
+    parcel:"400-62-301", description:"installing a ground mount solar system with one battery",
+    systemKW:null, battery:true, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"ABERNATHY-CASTLE LIVING TRUST", ownerType:"Entity", lastSold:null, parcelType:"Mobile Home",
+    satelliteStatus:"verify", lat:33.254278, lng:-112.5029,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/832a3d72-f9a1-4c34-b6bb-713b7d1baf81",
+    notes:"WITHDRAWN. Ground mount solar — different install than rooftop. Trust ownership. Battery included."
+  },
+  {
+    id:"BLDR2509950", isNew:false, bucket:"ry",
+    address:"113 E MARICOPA RD BUCKEYE AZ 85326", zip:"85326",
+    status:"Withdrawn", statusLabel:"Withdrawn",
+    applied:"2025-12-16", issued:"2025-12-19", expire:"2026-06-17", finaled:null,
+    parcel:"504-53-100A", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM POWERWALL 3 BATTERY WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Powerwall 3",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"TARPLEY LARRY P/BERTHA M", ownerType:"Individual", lastSold:null, parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.384709, lng:-112.584018,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/9d0ee3d4-c716-409f-9843-a87bea607145",
+    notes:"WITHDRAWN. Powerwall 3 + MPU 225A Solar Ready. Same address now has new stalled permit BLDR2600645 — may have refiled."
+  },
+  {
+    id:"BLDR2510070", isNew:true, bucket:"ry",
+    address:"8612 S 204TH DR BUCKEYE AZ 85326", zip:"85326",
+    status:"Denied", statusLabel:"Denied",
+    applied:"2025-12-18", issued:null, expire:null, finaled:null,
+    parcel:"400-09-004B", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.368446, lng:-112.489057,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2510070",
+    notes:"DENIED Dec 2025. Tesla Integrated battery. Owner lookup pending. Denial reason unknown — prime pitch: 'the other guys' permit got denied, we can help.'"
+  },
+  {
+    id:"BLDR2509075", isNew:false, bucket:"ry",
+    address:"11305 S 195TH DR BUCKEYE AZ 85326", zip:"85326",
+    status:"Withdrawn", statusLabel:"Withdrawn",
+    applied:"2025-11-13", issued:"2025-11-24", expire:"2026-05-23", finaled:null,
+    parcel:"400-83-019", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"YANNONE ANTHONY W", ownerType:"Individual", lastSold:null, parcelType:"Residential",
+    satelliteStatus:"solar-detected", lat:33.343979, lng:-112.470666,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/ad54a796-bc79-4edb-91b5-ef07fc68eeb3",
+    notes:"WITHDRAWN. YANNONE ANTHONY W. Same address now has Denied permit BLDR2602684 — two failed attempts. Very motivated homeowner."
+  },
+  {
+    id:"BLDR2508599", isNew:false, bucket:"ry",
+    address:"12856 S ZUNI RD BUCKEYE AZ 85326", zip:"85326",
+    status:"Withdrawn", statusLabel:"Withdrawn",
+    applied:"2025-10-29", issued:"2025-10-31", expire:"2026-04-29", finaled:null,
+    parcel:"400-76-043", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"REICHENBERGER ROBERT M JR/SANDRA D", ownerType:"Individual", lastSold:null, parcelType:"Residential",
+    satelliteStatus:"solar-detected", lat:33.329575, lng:-112.486243,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0fcbd612-c121-42fe-941d-5fcdc54175ae",
+    notes:"WITHDRAWN. Tesla Integrated. Same address as BLDR2602943 (new permit just applied Apr 15 2026 — refiled!). Hot lead — they're trying again."
+  },
+  {
+    id:"BLDR2506917", isNew:false, bucket:"ry",
+    address:"1024 N 193RD AVE BUCKEYE AZ 85326", zip:"85326",
+    status:"Withdrawn", statusLabel:"Withdrawn",
+    applied:"2025-08-28", issued:"2025-09-03", expire:"2026-03-02", finaled:null,
+    parcel:"502-36-011C", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WHICH INCLUDES REDUCTION OF MAIN CIRCUIT BREAKER TO 175 AMPS // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"LOPEZ FAMILY LIVING TRUST", ownerType:"Entity", lastSold:null, parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.457818, lng:-112.474533,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/739a7c08-6fca-4496-9b43-18b14c3dd7be",
+    notes:"WITHDRAWN. Trust ownership. No battery — pitch storage. Main breaker reduction to 175A included."
+  },
+  {
+    id:"BLDR2505156", isNew:true, bucket:"ry",
+    address:"2030 S TUTHILL RD BUCKEYE AZ 85326", zip:"85326",
+    status:"Expired", statusLabel:"Expired",
+    applied:"2025-06-27", issued:"2025-07-01", expire:null, finaled:null,
+    parcel:"502-47-945L", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.428196, lng:-112.496157,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2505156",
+    notes:"EXPIRED. No battery. Owner lookup pending."
+  },
+  {
+    id:"BLDR2503908", isNew:true, bucket:"ry",
+    address:"23045 W HOPI ST BUCKEYE AZ 85326", zip:"85326",
+    status:"Denied", statusLabel:"Denied",
+    applied:"2025-05-12", issued:null, expire:null, finaled:null,
+    parcel:"504-63-526", description:"ROOFTOP SOLAR PANEL INSTALLATION",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.429534, lng:-112.546438,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2503908",
+    notes:"DENIED May 2025. Vague description — no system size visible. Owner lookup pending."
+  },
+  {
+    id:"BLDR2503626", isNew:true, bucket:"ry",
+    address:"308 3RD AVE E BUCKEYE AZ 85326", zip:"85326",
+    status:"Expired", statusLabel:"Expired",
+    applied:"2025-05-01", issued:"2025-05-09", expire:null, finaled:null,
+    parcel:"504-51-068", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM //INTEGRATED SOLAREDGE BATTERY// INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"SolarEdge Home Battery",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.380382, lng:-112.580938,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2503626",
+    notes:"EXPIRED. Integrated SolarEdge battery. Owner lookup pending."
+  },
+
+  /* — 85361 Wittmann — */
+  {
+    id:"BLDR2600631", isNew:false, bucket:"ry",
+    address:"22341 W DOVE VALLEY RD WITTMANN AZ 85361", zip:"85361",
+    status:"Issued", statusLabel:"Issued — STALLED 70 days",
+    applied:"2026-01-27", issued:"2026-02-12", expire:"2026-08-11", finaled:null,
+    parcel:"503-39-004N", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:"Green Muscle Solar", licenseROC:"328742", contractorPhone:"480-442-2240", contractorEmail:"permits@greenmusclesolar.com", valuation:64482,
+    owner:"Yvette & Donald Haughton", ownerType:"Individual", lastSold:"2025-07-01", parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.782113, lng:-112.543851,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/aa5b34ab-8234-4998-887e-1a7e45298ea2",
+    notes:"STALLED 70 days. Green Muscle Solar, ROC 328742. Est kW: ≈27.2 kW (est from $64,482 - $10,000 / $2,000) — very large system. Recent buyer (Jul 2025). Same address as withdrawn BLDR2509106."
+  },
+  {
+    id:"BLDR2600061", isNew:false, bucket:"ry",
+    address:"25505 W BROOKHART WAY WITTMANN AZ 85361", zip:"85361",
+    status:"Issued", statusLabel:"Issued — STALLED 92 days",
+    applied:"2026-01-06", issued:"2026-01-21", expire:"2026-07-20", finaled:null,
+    parcel:"503-32-496A", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:"Freedom Forever Arizona", licenseROC:"", contractorPhone:"602-888-7196", contractorEmail:"permitsarizona@freedomforever.com", valuation:12858,
+    owner:"Jordan A & Amber Schauer", ownerType:"Individual", lastSold:"2025-11-01", parcelType:"Land",
+    satelliteStatus:"clear", lat:33.741413, lng:-112.612173,
+    coordSource:"nominatim",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d5e059a5-04c9-448f-abe3-e97bf78cb7ed",
+    notes:"STALLED 92 days. Freedom Forever AZ. Est kW: ≈6.4 kW (est from $12,858 / $2,000). No battery — retrofit opportunity. Recent buyer (Nov 2025). Parcel listed as Land — new build?"
+  },
+  {
+    id:"BLDR2509106", isNew:false, bucket:"ry",
+    address:"22341 W DOVE VALLEY RD WITTMANN AZ 85361", zip:"85361",
+    status:"Withdrawn", statusLabel:"Withdrawn",
+    applied:"2025-11-13", issued:"2025-11-24", expire:"2026-05-23", finaled:null,
+    parcel:"503-39-004N", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:"HAUGHTON YVETTE/DONALD", ownerType:"Individual", lastSold:"2025-07-01", parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.782113, lng:-112.543851,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/eb1d97de-a429-4a51-baee-00273e5de52c",
+    notes:"WITHDRAWN. Same address now has stalled BLDR2600631 (refiled). Haughton family."
+  },
+  {
+    id:"BLDR2504762", isNew:true, bucket:"ry",
+    address:"30116 N 206TH AVE WITTMANN AZ 85361", zip:"85361",
+    status:"Expired", statusLabel:"Expired",
+    applied:"2025-06-12", issued:"2025-07-01", expire:null, finaled:null,
+    parcel:"503-48-525", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.756401, lng:-112.505713,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2504762",
+    notes:"EXPIRED. Tesla Integrated battery. Owner lookup pending."
+  },
+
+  /* — 85342 Morristown — */
+  {
+    id:"BLDR2506138", isNew:true, bucket:"ry",
+    address:"469 LIESEN DR MORRISTOWN AZ 85342", zip:"85342",
+    status:"Expired", statusLabel:"Expired",
+    applied:"2025-08-01", issued:"2025-08-05", expire:null, finaled:null,
+    parcel:"503-86-215A", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.814081, lng:-112.585403,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2506138",
+    notes:"EXPIRED. Morristown — northernmost zip. No battery — retrofit pitch. Owner lookup pending."
+  },
+
+  /* — 85353 Tolleson — */
+  {
+    id:"BLDR2508280", isNew:true, bucket:"ry",
+    address:"8606 W KINGMAN ST TOLLESON AZ 85353", zip:"85353",
+    status:"Denied", statusLabel:"Denied",
+    applied:"2025-10-17", issued:null, expire:null, finaled:null,
+    parcel:"101-30-095", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.420225, lng:-112.245084,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2508280",
+    notes:"DENIED. Tolleson edge of territory. No battery. Owner lookup pending. Denial reason unknown."
+  },
+
+  /* ════════════════════════════════════════════════════════════════
+     BUCKET 4 — FRESH ISSUED (5 permits)
+     Issued ≤20 days ago. Panels NOT yet installed most likely.
+     Top priority for immediate knocking.
+     ════════════════════════════════════════════════════════════════ */
+
+  {
+    id:"BLDR2602924", isNew:true, bucket:"fi",
+    address:"817 N 375TH AVE TONOPAH AZ 85354", zip:"85354",
+    status:"Issued", statusLabel:"Issued — 3 days ago 🔥",
+    applied:"2026-04-14", issued:"2026-04-20", expire:null, finaled:null,
+    parcel:"—", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:null, licenseROC:null, contractorPhone:null, contractorEmail:null, valuation:null,
+    owner:null, ownerType:null, lastSold:null, parcelType:null,
+    satelliteStatus:"clear", lat:33.454016, lng:-112.858965,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2602924",
+    notes:"ISSUED 3 DAYS AGO — top priority. Tesla Integrated battery. Owner/contractor lookup pending (Rule 4/5). NEW — not in prior pull."
+  },
+  {
+    id:"BLDR2602821", isNew:false, bucket:"fi",
+    address:"9413 S 543RD AVE TONOPAH AZ 85354", zip:"85354",
+    status:"Issued", statusLabel:"Issued — 8 days ago",
+    applied:"2026-04-10", issued:"2026-04-15", expire:"2026-10-12", finaled:null,
+    parcel:"401-57-402A", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Integrated (Powerwall 3)",
+    contractor:"United Energy Partners", licenseROC:"344599", contractorPhone:"480-226-1383", contractorEmail:"scott.wahlstrom@uepsolar.com", valuation:29450,
+    owner:"Eddie Duane Combs & Susan Corbin", ownerType:"Individual", lastSold:null, parcelType:"Residential",
+    satelliteStatus:"clear", lat:33.360667, lng:-113.220767,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/e19ff565-9366-4477-aa9b-66c7e80c4b60",
+    notes:"ISSUED 8 DAYS AGO. United Energy Partners, ROC 344599. Est kW: ≈9.7 kW (est from $29,450 - $10,000 / $2,000). Rural dwelling. Satellite showed no panels."
+  },
+  {
+    id:"BLDR2602370", isNew:false, bucket:"fi",
+    address:"37217 W POLK ST TONOPAH AZ 85354", zip:"85354",
+    status:"Issued", statusLabel:"Issued — 17 days ago",
+    applied:"2026-03-25", issued:"2026-04-06", expire:"2026-10-03", finaled:null,
+    parcel:"506-40-004G", description:"INSTALLATION OF PV BATTERY STORAGE TESLA POWERWALL 3 WITH 11.5 kWh PV STORAGE CAPACITY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:true, batteryModel:"Tesla Powerwall 3",
+    contractor:"SunX Solutions LLC", licenseROC:"", contractorPhone:"623-640-3032", contractorEmail:"Rlopez@sunxsolutions.com", valuation:14000,
+    owner:"Familia Martinez Revocable Living Trust", ownerType:"Entity", lastSold:null, parcelType:"Mobile Home",
+    satelliteStatus:"clear", lat:33.451201, lng:-112.853416,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/1f570d38-21fc-4879-b524-5edeadc58156",
+    notes:"ISSUED 17 DAYS AGO. BATTERY-ONLY PERMIT — no solar panels, just a Powerwall 3 (11.5 kWh storage). SunX Solutions. Trust ownership. No system kW to report — the 11.5 in description is kWh (battery capacity), not kW (solar size). Est size from $14,000 valuation: ≈2.0 kW (battery deducted) — but likely $0 solar, all battery cost. Verify at door."
+  },
+  {
+    id:"BLDR2602524", isNew:false, bucket:"fi",
+    address:"33125 W EUCLID AVE TONOPAH AZ 85354", zip:"85354",
+    status:"Issued", statusLabel:"Issued — 14 days ago",
+    applied:"2026-03-31", issued:"2026-04-09", expire:"2026-10-06", finaled:null,
+    parcel:"401-42-537", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:"Bright Home Energy", licenseROC:"", contractorPhone:"480-656-9538", contractorEmail:"permits@brighthomeenergy.com", valuation:12012,
+    owner:"Lisa Kaye Rose Casavant, Anthony Wayne & Nickolas Dahl", ownerType:"Individual", lastSold:"2026-02-01", parcelType:"Mobile Home",
+    satelliteStatus:"clear", lat:33.366214, lng:-112.767023,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d68d0d72-1cd3-4468-b374-098980008309",
+    notes:"ISSUED 14 DAYS AGO. Bright Home Energy. Est kW: ≈6.0 kW (est from $12,012 / $2,000). No battery — retrofit pitch. Very recent buyer (Feb 2026)."
+  },
+  {
+    id:"BLDR2602291", isNew:false, bucket:"fi",
+    address:"2907 N 391ST AVE TONOPAH AZ 85354", zip:"85354",
+    status:"Issued", statusLabel:"Issued — 14 days ago",
+    applied:"2026-03-23", issued:"2026-04-09", expire:"2026-10-10", finaled:null,
+    parcel:"506-45-150A", description:"ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
+    systemKW:null, battery:false, batteryModel:null,
+    contractor:"Independent Solar LLC", licenseROC:"", contractorPhone:"480-408-4986", contractorEmail:"permitting@independentsolar.com", valuation:24265,
+    owner:"Estellar V Nelson & Bishop V Ybarra", ownerType:"Individual", lastSold:"2026-03-01", parcelType:"Mobile Home",
+    satelliteStatus:"verify", lat:33.479505, lng:-112.894502,
+    coordSource:"census",
+    portalUrl:"https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c93c5d8e-753f-4ef1-a3aa-5ca285b87e76",
+    notes:"ISSUED 14 DAYS AGO. Independent Solar LLC. Est kW: ≈12.1 kW (est from $24,265 / $2,000). No battery — retrofit opportunity. Very recent buyer (Mar 2026)."
+  }
+
+]; // end PERMITS_SEED
+
+/* ============================================================================
+   STATE MANAGEMENT
+   ============================================================================ */
+let state = { permits: [], lastSync: null };
+let currentDetailId = null;
+let activeFilter = 'all';
+const markers = {};
+
+function mergePermits(seed, saved) {
+  // Only overlay USER-GENERATED fields from the saved state.
+  // Structural fields (bucket, lat, lng, status, address, parcel, description,
+  // contractor, valuation, owner, etc.) always come from the fresh seed so that
+  // a new map build is never broken by stale state from the old color scheme
+  // (old map used bucket:"red"/"green"/"yellow"; new map uses bucket:"fa"/"pi"/"ry"/"fi").
+  const USER_FIELDS = ['outcome', 'outcomeDate', 'notes'];
+  const savedById = {};
+  (saved || []).forEach(p => { savedById[p.id] = p; });
+  const merged = seed.map(s => {
+    const sv = savedById[s.id];
+    if (!sv) return { ...s };
+    const userOverlay = {};
+    USER_FIELDS.forEach(f => { if (sv[f] !== undefined) userOverlay[f] = sv[f]; });
+    return { ...s, ...userOverlay };
+  });
+  return merged;
+}
+
+const REMOVE_OUTCOMES = new Set(['apptset', 'notint', 'hassolar', 'renter', 'soldu']);
+const SUPPRESS_30_DAYS = new Set(['notmoved']);
+function isActiveRoute(p) {
+  if (!p.outcome) return true;
+  if (REMOVE_OUTCOMES.has(p.outcome)) return false;
+  if (SUPPRESS_30_DAYS.has(p.outcome) && p.outcomeDate) {
+    const days = (Date.now() - new Date(p.outcomeDate).getTime()) / 86400000;
+    if (days < 30) return false;
+  }
+  return true;
+}
+
+/* ============================================================================
+   GITHUB SYNC
+   ============================================================================ */
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
+}
+function scheduleSave() { saveLocal(); }
+
+function setSyncStatus(cls, msg) {
+  const bar = document.getElementById('sync-bar');
+  bar.className = '';
+  if (cls) bar.classList.add(cls);
+  bar.textContent = msg;
+}
+
+async function loadFromGitHub() {
+  setSyncStatus('', '⏳ Loading state from GitHub…');
+  try {
+    const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${STATE_FILE}?t=${Date.now()}`;
+    const r = await fetch(rawUrl, { cache: 'no-store' });
+    if (r.status === 404) {
+      state.permits = mergePermits(PERMITS_SEED, []);
+      setSyncStatus('saved', '✓ Fresh state (no file yet)');
+      renderMap(); updateStats();
+      return;
+    }
+    if (!r.ok) throw new Error('GitHub ' + r.status);
+    const content = await r.json();
+    state.permits = mergePermits(PERMITS_SEED, content.permits || []);
+    state.lastSync = new Date().toISOString();
+    try {
+      const shaRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${STATE_FILE}?ref=${GITHUB_BRANCH}`, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' }
+      });
+      if (shaRes.ok) { const j = await shaRes.json(); window._ghSha = j.sha; }
+    } catch(e) {}
+    setSyncStatus('saved', '✓ State loaded · ' + new Date(state.lastSync).toLocaleTimeString());
+  } catch(e) {
+    const local = localStorage.getItem(LS_KEY);
+    if (local) {
+      state = JSON.parse(local);
+      state.permits = mergePermits(PERMITS_SEED, state.permits || []);
+    } else {
+      state.permits = mergePermits(PERMITS_SEED, []);
+    }
+    setSyncStatus('error', '⚠ GitHub unreachable — using local cache');
+  }
+  renderMap(); updateStats();
+}
+
+async function saveAndPush() {
+  const btn = document.getElementById('update-btn');
+  btn.disabled = true; btn.textContent = '⏳ Saving…';
+  const p = state.permits.find(x => x.id === currentDetailId);
+  if (p) {
+    p.notes = document.getElementById('d-notes').value;
+    p.outcome = Array.from(document.querySelectorAll('.obtn.active'))[0]?.dataset.outcome || p.outcome;
+    p.outcomeDate = p.outcome ? new Date().toISOString() : p.outcomeDate;
+    if (markers[p.id]) updateMarkerStyle(markers[p.id], p);
+  }
+  saveLocal();
+  const pat = getGitHubPAT();
+  if (!pat) { btn.disabled = false; btn.textContent = '💾 Update'; return; }
+  try {
+    setSyncStatus('saving', '⏳ Pushing to GitHub…');
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify({ permits: state.permits, lastUpdated: new Date().toISOString() }, null, 2))));
+    const body = { message: 'Update Tonopah state', content, branch: GITHUB_BRANCH };
+    if (window._ghSha) body.sha = window._ghSha;
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${STATE_FILE}`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + pat, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('PUT ' + res.status);
+    const j = await res.json();
+    window._ghSha = j.content.sha;
+    setSyncStatus('saved', '✓ Saved to GitHub · ' + new Date().toLocaleTimeString());
+    btn.textContent = '✓ Saved!';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '💾 Update'; }, 2000);
+  } catch(e) {
+    setSyncStatus('error', '⚠ GitHub push failed · saved locally');
+    btn.disabled = false; btn.textContent = '💾 Update';
+  }
+  updateStats();
+}
+
+/* ============================================================================
+   MAP + PINS
+   ============================================================================ */
+const BUCKET_COLORS = {
+  fa: '#06b6d4',   // Fresh Applied — cyan
+  pi: '#f97316',   // Possibly Installed — orange
+  ry: '#ef4444',   // Retain for 1 Year — red
+  fi: '#22c55e',   // Fresh Issued — green
+};
+const BUCKET_LABELS = {
+  fa: 'FA', pi: 'PI', ry: '↩', fi: 'FI'
+};
+
+let map;
+function initMap() {
+  map = L.map('map', { zoomControl: true }).setView(TERRITORY.center, TERRITORY.zoom);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 19
+  }).addTo(map);
+}
+
+function makePinIcon(p) {
+  const outcome = p.outcome;
+  let bg = BUCKET_COLORS[p.bucket] || '#888';
+  let label = BUCKET_LABELS[p.bucket] || '?';
+  let shadow = '';
+  // New permit — purple glow if not yet knocked
+  if (p.isNew && !outcome) { shadow = 'box-shadow:0 0 0 2px #fff,0 0 8px #a78bfa;'; }
+  if (outcome === 'apptset') { bg = '#22c55e'; label = '★'; }
+  else if (outcome === 'notint') { bg = '#ef4444'; label = '✕'; }
+  else if (outcome === 'hassolar') { bg = '#38bdf8'; label = '☀'; }
+  else if (outcome === 'nih')    { bg = '#a78bfa'; label = '—'; }
+  else if (outcome === 'renter') { bg = '#f59e0b'; label = 'R'; }
+  else if (outcome === 'called') { bg = '#fbbf24'; label = '☎'; }
+  else if (outcome === 'soldu')  { bg = '#10b981'; label = '🎉'; shadow = 'box-shadow:0 0 0 3px #fff,0 0 12px '+bg+';'; }
+  return L.divIcon({
+    html: `<div class="pin" style="background:${bg};${shadow}"><div class="pin-inner">${label}</div></div>`,
+    iconSize: [26, 26], iconAnchor: [13, 26], popupAnchor: [0, -26], className: ''
+  });
+}
+
+function updateMarkerStyle(marker, p) {
+  marker.setIcon(makePinIcon(p));
+}
+
+function renderMap() {
+  // Clear old markers
+  Object.values(markers).forEach(m => { try { map.removeLayer(m); } catch(e) {} });
+  Object.keys(markers).forEach(k => delete markers[k]);
+
+  state.permits.forEach(p => {
+    if (!p.lat || !p.lng) return;
+    const m = L.marker([p.lat, p.lng], { icon: makePinIcon(p) }).addTo(map);
+    m.on('click', () => openDetail(p.id));
+    markers[p.id] = m;
+  });
+}
+
+function filterMarkers(filter) {
+  activeFilter = filter;
+  state.permits.forEach(p => {
+    const m = markers[p.id];
+    if (!m) return;
+    let show = true;
+    if (filter === 'all') show = true;
+    else if (filter === 'unknocked') show = !p.outcome;
+    else if (filter === 'fa') show = p.bucket === 'fa';
+    else if (filter === 'pi') show = p.bucket === 'pi';
+    else if (filter === 'ry') show = p.bucket === 'ry';
+    else if (filter === 'fi') show = p.bucket === 'fi';
+    else if (['85354','85326','85361','85342','85322','85353'].includes(filter)) show = p.zip === filter;
+    else if (filter === 'nih') show = p.outcome === 'nih';
+    else if (filter === 'called') show = p.outcome === 'called';
+    else if (filter === 'new') show = p.isNew === true;
+    else if (filter === 'hidden') show = REMOVE_OUTCOMES.has(p.outcome);
+    if (show) { try { map.addLayer(m); } catch(e) {} }
+    else       { try { map.removeLayer(m); } catch(e) {} }
+  });
+}
+
+/* ============================================================================
+   DETAIL SHEET
+   ============================================================================ */
+function openDetail(id) {
+  const p = state.permits.find(x => x.id === id);
+  if (!p) return;
+  currentDetailId = id;
+
+  document.getElementById('d-addr').textContent = p.address;
+  // Build meta line
+  const bucketNames = {fa:'Fresh Applied',pi:'Possibly Installed',ry:'Retain 1yr',fi:'Fresh Issued'};
+  const bucketClass = {fa:'bb-fa',pi:'bb-pi',ry:'bb-ry',fi:'bb-fi'};
+  const metaEl = document.getElementById('d-meta');
+  const newBadge = p.isNew ? '<span class="new-badge">🆕 New</span>' : '';
+  metaEl.innerHTML = `<span class="bucket-badge ${bucketClass[p.bucket]||''}">${bucketNames[p.bucket]||p.bucket}</span>` +
+    newBadge +
+    `Tonopah AZ · Maricopa County Permit Center`;
+
+  document.getElementById('d-status').textContent = p.statusLabel || p.status || '—';
+  if (p.stalled) document.getElementById('d-status').innerHTML += ' <span class="stalled-tag">⚠ STALLED</span>';
+
+  document.getElementById('d-applied').textContent = p.applied || '—';
+  document.getElementById('d-issued').textContent = p.issued ? p.issued + (p.issueDays ? ' ('+p.issueDays+' days ago)' : '') : '—';
+  document.getElementById('d-expire').textContent = p.expire || '—';
+  document.getElementById('d-finaled').textContent = p.finaled || '—';
+
+  // Contractor
+  const el_c = document.getElementById('d-contractor');
+  el_c.textContent = p.contractor || '— (pending XLS lookup)';
+  el_c.className = 'v' + (p.contractor ? '' : ' warn');
+  document.getElementById('d-license').textContent = p.licenseROC || '—';
+
+  const el_ph = document.getElementById('d-phone');
+  if (p.contractorPhone) {
+    el_ph.innerHTML = `<a href="tel:${p.contractorPhone}" style="color:#38bdf8">${p.contractorPhone}</a>`;
+  } else { el_ph.textContent = '—'; }
+
+  const el_em = document.getElementById('d-email');
+  if (p.contractorEmail) {
+    el_em.innerHTML = `<a href="mailto:${p.contractorEmail}" style="color:#38bdf8;font-size:10px">${p.contractorEmail}</a>`;
+  } else { el_em.textContent = '—'; }
+
+  // Valuation + kW
+  const valEl = document.getElementById('d-valuation');
+  if (p.valuation) {
+    valEl.textContent = '$' + p.valuation.toLocaleString();
+  } else { valEl.textContent = '— (pending XLS)'; valEl.style.color = '#64748b'; }
+
+  const sizeEl = document.getElementById('d-size');
+  const sizeLabelEl = document.getElementById('d-size-label');
+  if (p.systemKW) {
+    // Exact kW pulled verbatim from permit description — hard number, show bold
+    sizeLabelEl.textContent = 'System size';
+    sizeEl.textContent = p.systemKW + ' kW DC';
+    sizeEl.style.fontStyle = 'normal'; sizeEl.style.color = '#e5e7eb'; sizeEl.style.fontWeight = '700';
+    sizeEl.title = 'Exact value from permit description';
+  } else if (p.valuation) {
+    // No kW in description — derived from permit valuation using formula
+    const battDeduct = p.battery ? 10000 : 0;
+    const est = Math.round(((p.valuation - battDeduct) / 2000) * 2) / 2;
+    sizeLabelEl.innerHTML = 'Est. size <span style="color:#fb923c;font-size:9px;font-weight:800">⚠ ESTIMATE</span>';
+    sizeEl.innerHTML = '<span style="color:#fb923c;font-weight:700">≈ ' + est + ' kW</span>'
+      + '<br><span style="font-size:9px;color:#64748b;font-style:italic">'
+      + 'Not from permit — derived from $' + p.valuation.toLocaleString()
+      + ' valuation' + (battDeduct ? ' (−$10k battery)' : '') + ' ÷ $2,000</span>';
+    sizeEl.style.textAlign = 'right';
+  } else {
+    sizeLabelEl.textContent = 'System size';
+    sizeEl.textContent = '— (not in description)'; sizeEl.style.color = '#64748b';
+    sizeEl.style.fontStyle = 'normal'; sizeEl.style.fontWeight = 'normal';
+  }
+
+  // Battery
+  const battEl = document.getElementById('d-battery');
+  if (p.battery) {
+    battEl.textContent = p.batteryModel || 'Yes';
+    battEl.className = 'v battery-yes';
+  } else {
+    battEl.textContent = 'No battery — retrofit opportunity';
+    battEl.className = 'v battery-no';
+  }
+
+  // Owner
+  document.getElementById('d-owner').textContent = p.owner || '— (pending assessor)';
+  document.getElementById('d-owner-type').textContent = p.ownerType || '—';
+  document.getElementById('d-last-sold').textContent = p.lastSold || '—';
+  document.getElementById('d-parcel').textContent = p.parcel || '—';
+  document.getElementById('d-parcel-type').textContent = p.parcelType || '—';
+
+  // Satellite
+  const satEl = document.getElementById('d-sat');
+  const satMap = { clear:'✓ Clear roof', verify:'🟡 Verify at door', 'solar-detected':'🔴 Panels visible', pending:'⏳ Pending (Rule 2)' };
+  satEl.textContent = satMap[p.satelliteStatus] || p.satelliteStatus || '—';
+
+  // Description
+  document.getElementById('d-description').textContent = p.description || '—';
+
+  // Nav links
+  const enc = encodeURIComponent(p.address);
+  document.getElementById('d-apple').href = 'https://maps.apple.com/?q=' + enc;
+  document.getElementById('d-gsat').href = 'https://www.google.com/maps/search/?api=1&query=' + enc + '&basemap=satellite';
+  document.getElementById('d-portal').href = p.portalUrl || '#';
+
+  // Notes + outcomes
+  document.getElementById('d-notes').value = p.notes || '';
+  document.querySelectorAll('.obtn').forEach(btn => {
+    btn.classList.remove('active');
+    ['apptset','notint','hassolar','renter','nih','called','notmoved','soldu'].forEach(cls => btn.classList.remove(cls));
+    if (p.outcome && btn.dataset.outcome === p.outcome) {
+      btn.classList.add('active', p.outcome);
+    }
+  });
+
+  document.getElementById('detail').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail').classList.remove('open');
+  currentDetailId = null;
+}
+
+/* ── Outcome button taps ── */
+document.querySelectorAll('.obtn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const outcome = this.dataset.outcome;
+    const p = state.permits.find(x => x.id === currentDetailId);
+    if (!p) return;
+    document.querySelectorAll('.obtn').forEach(b => {
+      b.classList.remove('active');
+      ['apptset','notint','hassolar','renter','nih','called','notmoved','soldu'].forEach(c => b.classList.remove(c));
+    });
+    if (p.outcome === outcome) {
+      p.outcome = null; p.outcomeDate = null;
+    } else {
+      this.classList.add('active', outcome);
+      p.outcome = outcome; p.outcomeDate = new Date().toISOString();
+    }
+    if (markers[p.id]) updateMarkerStyle(markers[p.id], p);
+    scheduleSave();
+    updateStats();
+  });
+});
+
+document.getElementById('d-notes').addEventListener('input', scheduleSave);
+
+/* ── Filter chips ── */
+document.querySelectorAll('.fchip').forEach(chip => {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.fchip').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    filterMarkers(this.dataset.filter);
+  });
+});
+
+/* ============================================================================
+   STATS
+   ============================================================================ */
+function updateStats() {
+  const counts = { fa:0, pi:0, ry:0, fi:0, new:0 };
+  state.permits.forEach(p => {
+    if (isActiveRoute(p) && counts[p.bucket] !== undefined) counts[p.bucket]++;
+    if (p.isNew && isActiveRoute(p)) counts.new++;
+  });
+  document.getElementById('stat-fa').textContent = counts.fa;
+  document.getElementById('stat-pi').textContent = counts.pi;
+  document.getElementById('stat-ry').textContent = counts.ry;
+  document.getElementById('stat-fi').textContent = counts.fi;
+  document.getElementById('stat-new').textContent = counts.new;
+}
+
+/* ============================================================================
+   BOOT
+   ============================================================================ */
+initMap();
+loadFromGitHub();
+
+// Close detail on map click
+map.on('click', () => {
+  if (document.getElementById('detail').classList.contains('open')) closeDetail();
+});
+
+// Touch handling for iOS
+document.getElementById('detail').addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+</script>
+</body>
+</html>
