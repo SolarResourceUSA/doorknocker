@@ -317,7 +317,8 @@
       "recentBuyer": true,
       "parcelType": "Residential",
       "satelliteStatus": "verify",
-      "satelliteNote": ""
+      "satelliteNote": "",
+      "notes": ""
     },
     {
       "id": "BLDR2507438",
@@ -352,7 +353,8 @@
       "recentBuyer": false,
       "parcelType": "Mobile Home",
       "satelliteStatus": "verify",
-      "satelliteNote": ""
+      "satelliteNote": "",
+      "notes": ""
     },
     {
       "id": "BLDR2601941",
@@ -707,7 +709,10 @@
       "recentBuyer": false,
       "parcelType": "Mobile Home",
       "satelliteStatus": "clear",
-      "satelliteNote": "Mobile home compound, no panels"
+      "satelliteNote": "Mobile home compound, no panels",
+      "notes": "",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-04-24T01:27:54.730Z"
     },
     {
       "id": "BLDR2509075",
@@ -994,9 +999,10 @@
       "recentBuyer": true,
       "parcelType": "Mobile Home",
       "satelliteStatus": "verify",
-      "satelliteNote": ""
+      "satelliteNote": "",
+      "notes": ""
     }
   ],
-  "lastSync": "2026-04-24T01:26:23.922Z",
+  "lastSync": "2026-04-24T01:27:55.801Z",
   "territory": "Tonopah AZ"
 }
