@@ -63,7 +63,7 @@
   .fchip.active { background: #3a2a0d; color: #f59e0b; border-color: #5c4a1e; }
 
   /* ── Map ── */
-  #map { width: 100%; height: calc(100vh - 240px); min-height: 400px; background: #1a1f2e; }
+  #map { width: 100%; height: calc(100vh - 240px); min-height: 400px; background: #e8eef2; }
 
   /* Custom pin colors by status */
   .pin {
@@ -82,6 +82,7 @@
   .pin.bk-final  { background: #6b7280; }
   .pin.bk-sold   { background: #3b82f6; }
   .pin.bk-nih    { background: #a78bfa; }
+  .pin.bk-purple { background: #a855f7; box-shadow: 0 0 0 2px #fff, 0 0 8px #a855f7; }
 
   /* ── Popup / detail sheet ── */
   .leaflet-popup-content-wrapper {
@@ -194,6 +195,7 @@
   <button class="fchip" data-filter="green">🟢 Issued</button>
   <button class="fchip" data-filter="yellow">🟡 In‑progress</button>
   <button class="fchip" data-filter="red">🔴 Hot lead</button>
+  <button class="fchip" data-filter="purple">🟣 Has kW</button>
   <button class="fchip" data-filter="nih">NIH</button>
   <button class="fchip" data-filter="called">Called</button>
 </div>
@@ -280,9 +282,23 @@ const STATE_FILE    = 'tonopah-permit-state.json';
 const LS_KEY        = 'srusa-tonopah-permit-state-v1';
 const PAT_LS_KEY    = 'srusa-gh-pat';
 // PAT is NOT embedded (GitHub secret scanning blocks that). Reads use the
-// public raw.githubusercontent.com endpoint (no auth). Writes prompt the rep
-// for the sync passcode the first time they tap a door outcome, then cache in
-// localStorage so they only enter it once per device.
+// public raw.githubusercontent.com endpoint (no auth). Writes use a token
+// supplied either via the URL fragment (#t=...) on first visit or cached in
+// localStorage from a prior visit. Reps never have to type anything — Ryan
+// sends a bookmarkable link, they tap it, token installs silently.
+(function installTokenFromHash() {
+  try {
+    const hash = window.location.hash || '';
+    const m = hash.match(/[#&]t=([^&]+)/);
+    if (m && m[1]) {
+      localStorage.setItem(PAT_LS_KEY, decodeURIComponent(m[1]).trim());
+      // Strip the token out of the URL so it's not sitting in the address bar.
+      const cleanHash = hash.replace(/[#&]t=[^&]+/, '').replace(/^#&/, '#');
+      const cleanUrl = window.location.pathname + window.location.search + (cleanHash === '#' ? '' : cleanHash);
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  } catch (e) { /* best effort */ }
+})();
 function getGitHubPAT() {
   let pat = localStorage.getItem(PAT_LS_KEY) || '';
   if (!pat) {
@@ -640,7 +656,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 217,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "506-41-171X",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0fbff63a-9aab-415f-a93a-b32b80f7bdca",
@@ -675,7 +691,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "green",
     "ageDays": 42,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "500-69-032",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // TESLA POWERWALL 3 BATTERY // WITH MAIN SERVICE PANEL UPGRADE TO 225A SOLAR READY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/edcd1f1d-9e69-46a7-b96b-e216744071bb",
@@ -710,7 +726,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 237,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "502-36-011C",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM WHICH INCLUDES REDUCTION OF MAIN CIRCUIT BREAKER TO 175 AMPS // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/739a7c08-6fca-4496-9b43-18b14c3dd7be",
@@ -745,7 +761,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 240,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "503-34-018F",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/f628309b-f565-480d-972d-f1142b7dcab3",
@@ -780,7 +796,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "yellow",
     "ageDays": 19,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "506-41-113H",
     "description": "7.020 kW DC ROOF MOUNTED SOLAR",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/621d6fb4-9ef4-4cef-baef-0de36d879ce6",
@@ -815,7 +831,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "green",
     "ageDays": 22,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "401-42-537",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d68d0d72-1cd3-4468-b374-098980008309",
@@ -850,7 +866,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 97,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "503-34-016T",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/dae8f6e0-a6f5-43ab-acdf-a08bf4aa194d",
@@ -885,7 +901,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "green",
     "ageDays": 28,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "506-40-004G",
     "description": "INSTALLATION OF PV BATTERY STORAGE TESLA POWERWALL 3 WITH 11.5 kWh PV STORAGE CAPACITY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/1f570d38-21fc-4879-b524-5edeadc58156",
@@ -905,7 +921,8 @@ const PERMITS_SEED = [
     "recentBuyer": false,
     "parcelType": "Mobile Home",
     "satelliteStatus": "clear",
-    "satelliteNote": "White manufactured home, no panels"
+    "satelliteNote": "White manufactured home, no panels",
+    "batteryKWh": 11.5
   },
   {
     "id": "BLDR2600061",
@@ -920,7 +937,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 106,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "503-32-496A",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/d5e059a5-04c9-448f-abe3-e97bf78cb7ed",
@@ -955,7 +972,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 61,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "400-62-301",
     "description": "installing a ground mount solar system with one battery",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/832a3d72-f9a1-4c34-b6bb-713b7d1baf81",
@@ -990,7 +1007,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "green",
     "ageDays": 65,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "504-12-005T",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // (2) TESLA POWERWALL 3 BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/ac7269ff-6e1d-4b74-b168-0a659efa0120",
@@ -1025,7 +1042,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 160,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "400-83-019",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/ad54a796-bc79-4edb-91b5-ef07fc68eeb3",
@@ -1060,7 +1077,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 175,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "400-76-043",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0fcbd612-c121-42fe-941d-5fcdc54175ae",
@@ -1095,7 +1112,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "green",
     "ageDays": 12,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "401-57-402A",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/e19ff565-9366-4477-aa9b-66c7e80c4b60",
@@ -1130,7 +1147,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "green",
     "ageDays": 30,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "506-45-150A",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c93c5d8e-753f-4ef1-a3aa-5ca285b87e76",
@@ -1165,7 +1182,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "green",
     "ageDays": 35,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "506-45-295B",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/f4e4f21b-4d66-4d7d-bce8-4de6e0f8a96e",
@@ -1200,7 +1217,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 82,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "506-45-350",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM ON EXISTING MANUFACTURED HOME // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/8cf572c0-817f-42be-b67b-c5e5c38de634",
@@ -1235,7 +1252,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "red",
     "ageDays": 100,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "503-17-007N",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/c553d056-dd29-4adb-a1a3-cd672239dbc5",
@@ -1270,7 +1287,7 @@ const PERMITS_SEED = [
     "finaled": null,
     "bucket": "yellow",
     "ageDays": 54,
-    "coordSource": "zip-approx",
+    "coordSource": "geocoded",
     "parcel": "506-41-139D",
     "description": "ROOF MOUNTED APS GRID TIE PHOTOVOLTAIC SYSTEM ON EXISTING MANUFACTURED HOME // INTEGRATED TESLA BATTERY // INSTALL PER MANUFACTURER'S RECOMMENDATION AND 2017 NEC ARTICLES 690 & 705",
     "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/0996b598-8a02-4fb4-a633-60515770fd41",
@@ -1461,9 +1478,9 @@ async function pushToGitHub() {
 let map;
 function initMap() {
   map = L.map('map', { zoomControl: true }).setView(TERRITORY.center, TERRITORY.zoom);
-  // Dark tile layer for low-light comfort
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
+  // Light, Apple-Maps-style tile layer (CartoDB Voyager)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
     attribution: '© OpenStreetMap © CARTO',
     subdomains: 'abcd',
   }).addTo(map);
@@ -1471,7 +1488,7 @@ function initMap() {
 
 function makePinIcon(bucket) {
   const cls = 'bk-' + (bucket || 'red');
-  const glyphs = { green: 'I', yellow: '•', red: '!', final: '✓', sold: '$', nih: 'N' };
+  const glyphs = { green: 'I', yellow: '•', red: '!', final: '✓', sold: '$', nih: 'N', purple: 'kW' };
   const glyph = glyphs[bucket] || '?';
   return L.divIcon({
     className: 'pin-wrap',
@@ -1481,11 +1498,36 @@ function makePinIcon(bucket) {
   });
 }
 
+// Compute current age in days from the most recent meaningful date on the permit.
+// Falls back to p.ageDays (frozen at pull time) if no parseable date is present.
+function currentAgeDays(p) {
+  const src = p.issued || p.applied;
+  if (src) {
+    const d = new Date(src + 'T00:00:00');
+    if (!isNaN(d)) {
+      return Math.floor((Date.now() - d.getTime()) / 86400000);
+    }
+  }
+  return (typeof p.ageDays === 'number') ? p.ageDays : 0;
+}
+
+// Hot-window cutoff: issued permits older than this flip from green to red.
+const GREEN_MAX_AGE_DAYS = 60;
+
 function bucketForPin(p) {
   // Outcome-driven pin recoloring
   if (p.outcome === 'soldu') return 'sold';
   if (p.outcome === 'notint' || p.outcome === 'renter' || p.outcome === 'hassolar' || p.outcome === 'apptset') return 'final';
   if (p.outcome === 'nih') return 'nih';
+  // Verified system kW gets a purple pin so reps know we already have the size
+  if (p.systemKW) return 'purple';
+  // Status-driven hot-window rule: any issued permit within GREEN_MAX_AGE_DAYS of
+  // its issue date is green; older issued permits flip to red (homeowner likely
+  // already signed). This overrides seeded buckets because seed ageDays was
+  // originally computed from applied date, not issued date.
+  if (p.status === 'issued') {
+    return currentAgeDays(p) <= GREEN_MAX_AGE_DAYS ? 'green' : 'red';
+  }
   return p.bucket || 'red';
 }
 
@@ -1498,9 +1540,10 @@ function renderMarkers() {
     if (p.lat == null || p.lng == null) return false;
     if (activeFilter === 'all') return true;
     if (activeFilter === 'unknocked') return isActiveRoute(p) && !p.outcome;
-    if (activeFilter === 'green')  return p.bucket === 'green';
-    if (activeFilter === 'yellow') return p.bucket === 'yellow';
-    if (activeFilter === 'red')    return p.bucket === 'red';
+    if (activeFilter === 'green')  return bucketForPin(p) === 'green';
+    if (activeFilter === 'yellow') return bucketForPin(p) === 'yellow';
+    if (activeFilter === 'red')    return bucketForPin(p) === 'red';
+    if (activeFilter === 'purple') return !!p.systemKW;
     if (activeFilter === 'nih') return p.outcome === 'nih';
     if (activeFilter === 'called') return p.outcome === 'called';
     return true;
@@ -1656,6 +1699,9 @@ function openDetail(id) {
 }
 
 function closeDetail() {
+  // Belt-and-suspenders: flush any pending notes to state before tearing down.
+  flushNotesToState();
+  saveLocal();
   currentDetailId = null;
   document.getElementById('detail').classList.remove('open');
 }
@@ -1687,12 +1733,24 @@ document.querySelectorAll('.obtn').forEach(btn => {
   });
 });
 
-/* ── Notes save on blur (localStorage only, no GitHub push) ── */
-document.getElementById('d-notes').addEventListener('blur', () => {
+/* ── Notes save on every keystroke + on blur (localStorage only, no GitHub push) ──
+   Fires on every character typed so nothing is lost if the rep accidentally
+   closes the sheet, backgrounds the browser, or the phone restarts mid-note.
+   The debounce keeps localStorage writes cheap. */
+let _notesSaveTimer = null;
+function flushNotesToState() {
   if (!currentDetailId) return;
   const p = state.permits.find(x => x.id === currentDetailId);
   if (!p) return;
   p.notes = document.getElementById('d-notes').value;
+}
+document.getElementById('d-notes').addEventListener('input', () => {
+  flushNotesToState();
+  clearTimeout(_notesSaveTimer);
+  _notesSaveTimer = setTimeout(() => scheduleSave(), 400);
+});
+document.getElementById('d-notes').addEventListener('blur', () => {
+  flushNotesToState();
   scheduleSave();
 });
 
