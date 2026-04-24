@@ -881,7 +881,10 @@
       "recentBuyer": false,
       "parcelType": "Mobile Home",
       "satelliteStatus": "clear",
-      "satelliteNote": "Dark-roof mobile home, no panels"
+      "satelliteNote": "Dark-roof mobile home, no panels",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-04-24T01:23:19.497Z",
+      "notes": ""
     },
     {
       "id": "BLDR2600729",
@@ -989,6 +992,6 @@
       "satelliteNote": ""
     }
   ],
-  "lastSync": "2026-04-24T01:23:00.473Z",
+  "lastSync": "2026-04-24T01:23:20.465Z",
   "territory": "Tonopah AZ"
 }
