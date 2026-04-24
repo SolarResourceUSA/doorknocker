@@ -1361,7 +1361,9 @@
       "lng": -112.858965,
       "coordSource": "census",
       "portalUrl": "https://maricopacountyaz-energovweb.tylerhost.net/apps/selfservice#/permit/BLDR2602924",
-      "notes": "ISSUED 3 DAYS AGO — top priority. Tesla Integrated battery. Owner/contractor lookup pending (Rule 4/5). NEW — not in prior pull."
+      "notes": "ISSUED 3 DAYS AGO — top priority. Tesla Integrated battery. Owner/contractor lookup pending (Rule 4/5). NEW — not in prior pull.",
+      "outcome": "soldu",
+      "outcomeDate": "2026-04-24T20:34:03.172Z"
     },
     {
       "id": "BLDR2602821",
@@ -1502,5 +1504,5 @@
       "outcomeDate": "2026-04-24T01:22:59.207Z"
     }
   ],
-  "lastUpdated": "2026-04-24T20:28:39.809Z"
+  "lastUpdated": "2026-04-24T20:34:03.173Z"
 }
