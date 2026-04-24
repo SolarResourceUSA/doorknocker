@@ -106,7 +106,8 @@
       "recentBuyer": false,
       "parcelType": "Mobile Home",
       "satelliteStatus": "verify",
-      "satelliteNote": ""
+      "satelliteNote": "",
+      "notes": ""
     },
     {
       "id": "BLDR2600600",
@@ -842,7 +843,10 @@
       "recentBuyer": true,
       "parcelType": "Mobile Home",
       "satelliteStatus": "verify",
-      "satelliteNote": "Satellite shows sparse lot with small outbuilding — likely imagery predates construction"
+      "satelliteNote": "Satellite shows sparse lot with small outbuilding — likely imagery predates construction",
+      "outcome": "hassolar",
+      "outcomeDate": "2026-04-24T01:22:59.207Z",
+      "notes": ""
     },
     {
       "id": "BLDR2602145",
@@ -985,6 +989,6 @@
       "satelliteNote": ""
     }
   ],
-  "lastSync": "2026-04-24T01:21:50.023Z",
+  "lastSync": "2026-04-24T01:23:00.473Z",
   "territory": "Tonopah AZ"
 }
