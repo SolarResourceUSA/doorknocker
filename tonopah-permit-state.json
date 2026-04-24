@@ -492,7 +492,8 @@
       "recentBuyer": false,
       "parcelType": "Land",
       "satelliteStatus": "verify",
-      "satelliteNote": ""
+      "satelliteNote": "",
+      "notes": ""
     },
     {
       "id": "BLDR2602524",
@@ -598,7 +599,10 @@
       "parcelType": "Mobile Home",
       "satelliteStatus": "clear",
       "satelliteNote": "White manufactured home, no panels",
-      "batteryKWh": 11.5
+      "batteryKWh": 11.5,
+      "outcome": "hassolar",
+      "outcomeDate": "2026-04-24T01:26:22.588Z",
+      "notes": ""
     },
     {
       "id": "BLDR2600061",
@@ -919,7 +923,8 @@
       "recentBuyer": true,
       "parcelType": "Mobile Home",
       "satelliteStatus": "clear",
-      "satelliteNote": "Manufactured home with carport, no panels"
+      "satelliteNote": "Manufactured home with carport, no panels",
+      "notes": ""
     },
     {
       "id": "BLDR2600204",
@@ -992,6 +997,6 @@
       "satelliteNote": ""
     }
   ],
-  "lastSync": "2026-04-24T01:23:20.465Z",
+  "lastSync": "2026-04-24T01:26:23.922Z",
   "territory": "Tonopah AZ"
 }
